@@ -1,0 +1,14 @@
+Package: gfilmm
+Type: Package
+Title: Generalized fiducial inference for linear mixed models
+Version: 0.0.0.9000
+Date: 2018-09-25
+Author: Stéphane Laurent
+Maintainer: Stéphane Laurent <laurent_step@yahoo.fr>
+Description: More about what it does (maybe more than one line)
+License: GPL-3
+Imports: Rcpp (>= 0.12.18), RcppEigen (>= 0.3.3.4.0)
+LinkingTo: Rcpp, RcppEigen
+RoxygenNote: 6.0.1
+Encoding: UTF-8
+LazyData: true

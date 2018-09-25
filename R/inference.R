@@ -18,7 +18,7 @@ inference <- function(gfi, v, alpha=0.05){
 
 #' Summary of fiducial distributions
 #'
-#' @param gfi Output of \code{\link{gfimm}}
+#' @param gfi output of \code{\link{gfilmm}}
 #' @param conf confidence level
 #'
 #' @return Summary statistics in a matrix.

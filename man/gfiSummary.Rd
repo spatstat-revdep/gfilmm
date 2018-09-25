@@ -7,7 +7,7 @@
 gfiSummary(gfi, conf = 0.95)
 }
 \arguments{
-\item{gfi}{Output of \code{\link{gfimm}}}
+\item{gfi}{output of \code{\link{gfilmm}}}
 
 \item{conf}{confidence level}
 }

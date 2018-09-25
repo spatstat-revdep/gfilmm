@@ -12,8 +12,10 @@ Eigen::VectorXd solve(const Eigen::MatrixXd & A, const Eigen::VectorXd & b){
   return A.colPivHouseholderQr().solve(b);
 } 
 
-Eigen::MatrixXd tsolveAndMultiply(const Eigen::MatrixXd & A, const Eigen::MatrixXd & C){
-  Eigen::MatrixXd M = A.triangularView<Eigen::Upper>().solve<Eigen::OnTheRight>(C);
+Eigen::MatrixXd tsolveAndMultiply(const Eigen::MatrixXd & A, 
+                                  const Eigen::MatrixXd & C){
+  Eigen::MatrixXd M = 
+    A.triangularView<Eigen::Upper>().solve<Eigen::OnTheRight>(C);
   return M; // C %*% solve(A)
 } 
 
@@ -155,7 +157,8 @@ std::vector<double> fidSample(Eigen::VectorXd VT2, Eigen::VectorXd VTsum,
         MIN = infty;
         for(size_t i=0; i<lzeronot; i++){
           size_t zni = zeronot[i];
-          MIN = std::min(MIN, std::min((U-VTsum(zni))/VT2(zni),(L-VTsum(zni))/VT2(zni)));
+          MIN = std::min(MIN, std::min((U-VTsum(zni))/VT2(zni), 
+                                       (L-VTsum(zni))/VT2(zni)));
         }
         temp = 1-(atan(MIN)/PI+0.5);
       }else if((d2 && c1) || (d1 && c2)){
@@ -163,7 +166,9 @@ std::vector<double> fidSample(Eigen::VectorXd VT2, Eigen::VectorXd VTsum,
         MAX = -infty;
         for(size_t i=0; i<lzeronot; i++){
           size_t zni = zeronot[i];
-          MAX = std::max(MAX, std::max((U-VTsum(zni))/VT2(zni),(L-VTsum(zni))/VT2(zni)));
+          MAX = std::max(MAX, 
+                         std::max((U-VTsum(zni))/VT2(zni), 
+                                  (L-VTsum(zni))/VT2(zni)));
         }
         temp = atan(MAX)/PI+0.5; 				
       }else{
@@ -270,7 +275,8 @@ Eigen::VectorXi cppunique(Eigen::VectorXi v){
   return out;
 } 
 
-std::vector<std::vector<int>> cartesianProduct(const std::vector<std::vector<int>>& v){
+std::vector<std::vector<int>> cartesianProduct(
+    const std::vector<std::vector<int>>& v){
   std::vector<std::vector<int>> s = {{}};
   for(auto& u : v){
     std::vector<std::vector<int>> r;
@@ -293,7 +299,8 @@ std::vector<std::vector<int>> combinations(std::vector<int> C, int n){
   return cartesianProduct(sets);
 }
 
-Eigen::MatrixXi vv2matrix(std::vector<std::vector<int>> U, size_t nrow, size_t ncol){
+Eigen::MatrixXi vv2matrix(std::vector<std::vector<int>> U, 
+                          size_t nrow, size_t ncol){
   Eigen::MatrixXi out(nrow,ncol);
   for(size_t i=0; i<nrow; i++){
     for(size_t j=0; j<ncol; j++){
@@ -314,7 +321,7 @@ size_t spow(size_t base, size_t exp){
   return result;
 }
 
-Eigen::VectorXi Vsort(Eigen::VectorXi V){ // dans Eigen ?
+Eigen::VectorXi Vsort(Eigen::VectorXi V){ 
   std::sort(V.data(),V.data()+V.size());
   return V;
 }
@@ -362,7 +369,9 @@ Eigen::MatrixXd umatrix(size_t nrows, size_t ncols){
   return U;
 }
 
-Eigen::MatrixXd pickCoordinates(size_t Dim, size_t N, size_t fe, std::vector<Eigen::MatrixXd> VT, Eigen::MatrixXd U){
+Eigen::MatrixXd pickCoordinates(size_t Dim, size_t N, size_t fe, 
+                                std::vector<Eigen::MatrixXd> VT, 
+                                Eigen::MatrixXd U){
   Eigen::MatrixXd VTend(Dim,N);
   for(size_t i=0; i<N; i++){
     Eigen::MatrixXd VTi = VT[i]; 
@@ -529,12 +538,6 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
         weight(k,i) = wt;
         VTsum += ZZ * VT2;
 
-        // Rcpp::List vertex = 
-        //   fidVertex(VTi, CC[i], VTsum, L(k), U(k), Dim, (int)n, k);
-        // VC[i] = vertex["vert"];
-        // CC[i] = vertex["CCtemp"];
-        // VT[i] = vertex["VTtemp"];
-        
         // fidVertex
         Eigen::MatrixXi CCi = CC[i];
         double Lk = L(k);
@@ -851,13 +854,9 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
                     Eigen::MatrixXd O2 = QR["Q"];
                     Eigen::MatrixXd R = QR["R"];
                     Eigen::MatrixXd O1 = tsolveAndMultiply(R, n1);
-                    //Rcpp::Rcout << "nrow O1 = Dimm1? " << O1.rows() << std::endl;
                     int rankO2 = O2.cols();
                     Eigen::VectorXd a(rankO2);
                     a = O2.transpose() * Z1;
-                    //Rcpp::Rcout << "ncol O2 " << O2.cols() << std::endl;
-                    //Rcpp::Rcout << "size Z1 " << Z1.size() << std::endl;
-                    //Rcpp::Rcout << "nrow O2 = size Z1 ? " << O2.rows() << std::endl;
                     Eigen::VectorXd O2a(lenZ1); 
                     O2a = O2 * a;
                     Eigen::VectorXd tau_(lenZ1);
@@ -876,14 +875,8 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
                     bbtau = bb*tau;
                     Eigen::VectorXd MM3(lenZ1);
                     MM3 = O2aa + bbtau;
-                    //   Eigen::VectorXd MM3 = O2*aa + bb*tau;
-                    //   //Rcpp::Rcout << "nrow O2 " << O2.rows() << std::endl;
-                    //   //Rcpp::Rcout << "size tau " << tau.size() << std::endl;
-                    //   ////Rcpp::Rcout << "size Z00 " << Z00.size() << std::endl;
-                    //   //Rcpp::Rcout << "nrow Ztemp " << Ztemp[kk].rows() << std::endl;
-                    //   //Rcpp::Rcout << "size MM3 " << MM3.size() << std::endl;
                     for(size_t jj=0; jj<lenZ1; jj++){
-                      Ztemp[kk](Z00[jj],ii) = MM3(jj); // pkoi size Z00 ?
+                      Ztemp[kk](Z00[jj],ii) = MM3(jj); 
                     }
                     Eigen::VectorXd M2(Dimm1);
                     M2 = O1 * (bbb*aa - a);
@@ -907,7 +900,7 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
                     for(size_t jj=0; jj<lenZ1; jj++){
                       Ztemp[kk](Z00[jj],ii) = bb*tau(jj);
                     }
-                    VTtemp[ii].block(fe+kk,0,1,VC[i]) *= b/bb;
+                    VTtemp[ii].row(fe+kk) *= b/bb;
                   }
                 }
               }
@@ -943,7 +936,7 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
     Eigen::MatrixXi signs = Eigen::MatrixXi::Zero(re,N);
     for(size_t i=0; i<N; i++){
       Eigen::MatrixXd VTi = VT[i];
-      for(size_t j=0; j<re ; j++){
+      for(size_t j=0; j<re; j++){
         Eigen::VectorXd row = VTi.row(fe+j);
         bool allneg = true;
         size_t jj = 0;
@@ -978,11 +971,11 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
     for(size_t i=0; i<N; i++){
       Eigen::MatrixXd VTtemp = VT[i];
       std::vector<Eigen::VectorXd> Ztemp(re);
+      // for(size_t ii=0; ii<re; ii++){
+      //   Ztemp[ii].resize(lengths_nn[ii]);
+      // }
       for(size_t ii=0; ii<re; ii++){
         Ztemp[ii].resize(lengths_nn[ii]);
-      }
-      for(size_t ii=0; ii<re; ii++){
-        // Ztemp[ii].resize(lengths_nn[ii]);
         for(int iii=0; iii<lengths_nn[ii]; iii++){
           Ztemp[ii](iii) = Z[ii](nn[ii](iii),i);
         }
@@ -1041,9 +1034,6 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
           O2aa = O2*aa;
           Eigen::VectorXd bbtau(lenZ1);
           bbtau = bb*tau;
-          //Eigen::VectorXd MM3(O2.rows());
-          //Rcpp::Rcout << "length Ztemp[kk] " << Ztemp[kk].size() << std::endl;
-          //Rcpp::Rcout << "= nrow O2 ? " << O2.rows() << std::endl;
           Ztemp[kk] = O2aa + bbtau;
           Eigen::VectorXd M2(Dimm1);
           M2 = O1 * (bbb*aa - a);
@@ -1063,7 +1053,6 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
           double bb = sqrt(rchisq(lenZ1));
           Ztemp[kk] = bb*tau;
           VTtemp.row(fe+kk) *= b/bb;
-          //VTtemp.block(fe+kk,0,1,VC[i]) *= b/bb; // c'est simplement row fe+kk
         }
       }
       for(size_t ii=0; ii<re; ii++){

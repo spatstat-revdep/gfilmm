@@ -409,7 +409,7 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
   
   //-------- SET-UP ALGORITHM OBJECTS ------------------------------------------
   std::vector<Eigen::MatrixXd> Z(re);
-  Eigen::MatrixXd weight = Eigen::MatrixXd::Ones(E(re-1),N);
+  Eigen::MatrixXd weight = Eigen::MatrixXd::Ones(n,N);
   Rcpp::NumericVector ESS(n, (double)N);
   std::vector<int> C; // initial constraints 
   std::vector<int> K; // complement of C
@@ -935,7 +935,7 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
         VT = VTVT;
         VC = VCVC;
         CC = CCCC;
-        weight = Eigen::MatrixXd::Ones(E(re-1),N);
+        weight = Eigen::MatrixXd::Ones(n,N);
       }
     }
     
@@ -1097,9 +1097,3 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
                             Rcpp::Named("ESS") = ESS);
 }
 
-// TODO: essaye fidVertex et fidSample dans gfimm - galère avec les 0-based... mais non
-// virer weights[i<re-1]
-// virer signs=1
-// intégrer fidVertex et fidSample au code, et nullSpace et QR
-// stocker N_sons[i] dans une variable, lengths_nn[ii], etc
-// remplacer les O2.cols(), etc

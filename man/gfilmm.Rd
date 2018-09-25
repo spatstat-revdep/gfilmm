@@ -35,3 +35,8 @@ f <- ewcdf(gfi$VERTEX[1,], gfi$WEIGHT)
 plot(f, xlim = c(40,65))
 quantile(f, c(0.025,0.975))
 }
+\references{
+J. Cisewski and J.Hannig. 
+\emph{Generalized fiducial inference for normal linear mixed models}. 
+The Annals of Statistics 2012, Vol. 40, No. 4, 2102–2127.
+}

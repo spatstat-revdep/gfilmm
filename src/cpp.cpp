@@ -19,14 +19,6 @@ Eigen::MatrixXd tsolveAndMultiply(const Eigen::MatrixXd & A,
   return M; // C %*% solve(A)
 } 
 
-Rcpp::List nullSpace(const Eigen::MatrixXd & M){ 
-  Eigen::FullPivLU<Eigen::MatrixXd> lu(M);
-  Eigen::MatrixXd nspace = lu.kernel(); // not orthonormal
-  int r = lu.rank();
-  return Rcpp::List::create(Rcpp::Named("kernel") = nspace,
-                            Rcpp::Named("rank") = r);
-}
-
 Rcpp::List QRdecomp(const Eigen::MatrixXd & M){ // for nrows >= ncols
   Eigen::HouseholderQR<Eigen::MatrixXd> qr = M.householderQr();
   Eigen::MatrixXd R_ = qr.matrixQR().triangularView<Eigen::Upper>();
@@ -55,12 +47,9 @@ Eigen::MatrixXd gmatrix(size_t nrows, size_t ncols){
   return G;
 }
 
-
-
 int sgn(double x){
   return (0 < x) - (x < 0);
 }
-
 
 std::uniform_real_distribution<double> runif(0.0,1.0);
 
@@ -68,7 +57,6 @@ double approx(double x, unsigned n){
   return round(x * pow(10, n)) / pow(10, n);
 }
 
-// [[Rcpp::export]]
 std::vector<double> fidSample(Eigen::VectorXd VT2, Eigen::VectorXd VTsum, 
                      double L, double U){
   double ZZ, wt; // outputs
@@ -844,10 +832,10 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
                   }
                   Eigen::MatrixXd MAT(lenJJ,((int)Dim)-1+ncolsCO2);
                   MAT << -XXX, CO2;
-                  Rcpp::List kern = nullSpace(MAT);
-                  int rk = kern["rank"];
+                  Eigen::FullPivLU<Eigen::MatrixXd> lu(MAT);
+                  int rk = lu.rank();
                   if(rk < MAT.cols()){
-                    Eigen::MatrixXd NUL = kern["kernel"];
+                    Eigen::MatrixXd NUL = lu.kernel();
                     Eigen::MatrixXd n1 = NUL.topRows(NUL.rows()-ncolsCO2);
                     Eigen::MatrixXd n2 = NUL.bottomRows(ncolsCO2);
                     Rcpp::List QR = QRdecomp(n2);
@@ -951,7 +939,7 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
     }
     
     //--------FINAL RESAMPLE ---------------------------------------------------
-    std::vector<Eigen::MatrixXd> ZZ(re);
+    std::vector<Eigen::MatrixXd> ZZ(re); // resized below
     std::vector<Eigen::VectorXi> nn(re);
     std::vector<int> lengths_nn(re);
     std::vector<Eigen::MatrixXd> VTVT(N);
@@ -971,9 +959,6 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
     for(size_t i=0; i<N; i++){
       Eigen::MatrixXd VTtemp = VT[i];
       std::vector<Eigen::VectorXd> Ztemp(re);
-      // for(size_t ii=0; ii<re; ii++){
-      //   Ztemp[ii].resize(lengths_nn[ii]);
-      // }
       for(size_t ii=0; ii<re; ii++){
         Ztemp[ii].resize(lengths_nn[ii]);
         for(int iii=0; iii<lengths_nn[ii]; iii++){
@@ -1005,10 +990,10 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
         }
         Eigen::MatrixXd MAT(n, Dimm1+ncolsCO2);
         MAT << -XXX,CO2;
-        Rcpp::List kern = nullSpace(MAT);
-        int rk = kern["rank"];
+        Eigen::FullPivLU<Eigen::MatrixXd> lu(MAT);
+        int rk = lu.rank();
         if(rk < MAT.cols()){
-          Eigen::MatrixXd NUL = kern["kernel"];
+          Eigen::MatrixXd NUL = lu.kernel();
           Eigen::MatrixXd n1 = NUL.topRows(NUL.rows()-ncolsCO2);
           Eigen::MatrixXd n2 = NUL.bottomRows(ncolsCO2);
           Rcpp::List QR = QRdecomp(n2);
@@ -1045,7 +1030,7 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
                 VTtemp(vert,jj) -= VTtemp(fe+kk,jj) * M2(vert-1);
               }
             }
-            VTtemp(fe+kk,jj) = bbb*VTtemp(fe+kk,jj);
+            VTtemp(fe+kk,jj) *= bbb;
           }
         }else{
           double b = sqrt(Z1.dot(Z1));

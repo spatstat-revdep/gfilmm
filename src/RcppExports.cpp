@@ -6,20 +6,6 @@
 
 using namespace Rcpp;
 
-// fidSample
-std::vector<double> fidSample(Eigen::VectorXd VT2, Eigen::VectorXd VTsum, double L, double U);
-RcppExport SEXP _gfilmm_fidSample(SEXP VT2SEXP, SEXP VTsumSEXP, SEXP LSEXP, SEXP USEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type VT2(VT2SEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type VTsum(VTsumSEXP);
-    Rcpp::traits::input_parameter< double >::type L(LSEXP);
-    Rcpp::traits::input_parameter< double >::type U(USEXP);
-    rcpp_result_gen = Rcpp::wrap(fidSample(VT2, VTsum, L, U));
-    return rcpp_result_gen;
-END_RCPP
-}
 // gfilmm_
 Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U, Eigen::MatrixXd FE, Eigen::MatrixXd RE, Eigen::MatrixXi RE2, Rcpp::IntegerVector E, size_t N, size_t thresh);
 RcppExport SEXP _gfilmm_gfilmm_(SEXP LSEXP, SEXP USEXP, SEXP FESEXP, SEXP RESEXP, SEXP RE2SEXP, SEXP ESEXP, SEXP NSEXP, SEXP threshSEXP) {
@@ -40,7 +26,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_gfilmm_fidSample", (DL_FUNC) &_gfilmm_fidSample, 4},
     {"_gfilmm_gfilmm_", (DL_FUNC) &_gfilmm_gfilmm_, 8},
     {NULL, NULL, 0}
 };

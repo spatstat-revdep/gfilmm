@@ -20,10 +20,6 @@ Summary of fiducial distributions
 \examples{
 data(KM41)
 h <- 0.005
-yl <- KM41$y-h
-yu <- KM41$y+h
-FE <- as.matrix(rep(1,nrow(KM41))) # intercept
-RE <- data.frame(Batch = KM41$Batch)
-gfi <- gfilmm(yl, yu, FE, RE, N=5000)
+gfi <- gfilmm(~ cbind(y-h, y+h), ~ 1, ~ Batch, N=500)
 gfiSummary(gfi)
 }

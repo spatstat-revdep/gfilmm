@@ -27,13 +27,9 @@ inference <- function(gfi, v, alpha=0.05){
 #' @examples
 #' data(KM41)
 #' h <- 0.005
-#' yl <- KM41$y-h
-#' yu <- KM41$y+h
-#' FE <- as.matrix(rep(1,nrow(KM41))) # intercept
-#' RE <- data.frame(Batch = KM41$Batch)
-#' gfi <- gfilmm(yl, yu, FE, RE, N=5000)
+#' gfi <- gfilmm(~ cbind(y-h, y+h), ~ 1, ~ Batch, N = 500)
 #' gfiSummary(gfi)
-gfiSummary <- function(gfi, conf=0.95){
-  t(vapply(1:nrow(gfi$VERTEX), 
-           function(v) inference(gfi, v, 1-conf), numeric(4)))
+gfiSummary <- function(gfi, conf = 0.95){
+  t(vapply(1L:nrow(gfi$VERTEX), 
+           function(v) inference(gfi, v, 1-conf), numeric(4L)))
 }

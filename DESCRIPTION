@@ -1,16 +1,16 @@
 Package: gfilmm
 Type: Package
-Title: Generalized fiducial inference for normal linear mixed models
-Version: 0.0.0.9000
-Date: 2018-09-25
+Title: Generalized Fiducial Inference for Normal Linear Mixed Models
+Version: 0.0.0.9001
+Date: 2020-10-25
 Author: Stéphane Laurent
-Maintainer: Stéphane Laurent <laurent_step@yahoo.fr>
+Maintainer: Stéphane Laurent <laurent_step@outlook.fr>
 Description: Simulation of the generalized fiducial distributions for normal linear mixed models with interval data. Cisewski and Hannig (2012) <doi:10.1214/12-AOS1030>.
 License: GPL-3
 Depends: R (>= 3.1.0)
-Imports: Rcpp (>= 0.12.18), RcppEigen (>= 0.3.3.4.0)
+Imports: Rcpp (>= 0.12.18), RcppEigen (>= 0.3.3.4.0), lazyeval
 Suggests: spatstat
 LinkingTo: Rcpp, RcppEigen
-RoxygenNote: 6.0.1
+RoxygenNote: 7.1.1
 Encoding: UTF-8
 LazyData: true

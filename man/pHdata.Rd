@@ -4,8 +4,10 @@
 \name{pHdata}
 \alias{pHdata}
 \title{pH dataset}
-\format{A data frame with 160 rows and 4 columns. 
-Column \code{SIRE} is a factor nested in column \code{DAM}.}
+\format{
+A data frame with 160 rows and 4 columns. 
+Column \code{SIRE} is a factor nested in column \code{DAM}.
+}
 \usage{
 data(pHdata)
 }

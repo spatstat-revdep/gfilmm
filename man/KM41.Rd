@@ -4,7 +4,9 @@
 \name{KM41}
 \alias{KM41}
 \title{Krishnamoorthy & Mathew's example 4.1}
-\format{A data frame with 25 rows and 2 columns.}
+\format{
+A data frame with 25 rows and 2 columns.
+}
 \usage{
 data(KM41)
 }

@@ -4,18 +4,19 @@
 \alias{gfilmm}
 \title{Generalized fiducial inference}
 \usage{
-gfilmm(yl, yu, FE, RE, N, thresh = N/2)
+gfilmm(y, fixed, random, data, N, thresh = N/2)
 }
 \arguments{
-\item{yl, yu}{data}
+\item{y}{a formula of the form \code{~ cbind(lower,upper)} for the interval 
+data}
 
-\item{FE}{fixed effects}
+\item{fixed}{formula for the fixed effects}
 
-\item{RE}{random effects}
+\item{random}{formula for the random effects}
 
 \item{N}{number of simulations}
 
-\item{thresh}{threshold, default \code{N/2}}
+\item{thresh}{threshold, default \code{N/2}; for experts only}
 }
 \value{
 A list with two components: \code{VERTEX} and \code{WEIGHT}.
@@ -25,11 +26,7 @@ Samples the fiducial distributions.
 }
 \examples{
 h <- 0.01
-yl <- npk$yield-h
-yu <- npk$yield+h
-FE <- as.matrix(rep(1,nrow(npk))) # intercept
-RE <- data.frame(block = npk$block)
-gfi <- gfilmm(yl, yu, FE, RE, N=5000)
+gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, N=500)
 library(spatstat) # to use ewcdf 
 f <- ewcdf(gfi$VERTEX[1,], gfi$WEIGHT)
 plot(f, xlim = c(40,65))

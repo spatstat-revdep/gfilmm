@@ -26,7 +26,7 @@ Samples the fiducial distributions.
 }
 \examples{
 h <- 0.01
-gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, N=500)
+gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N=500)
 library(spatstat) # to use ewcdf 
 f <- ewcdf(gfi$VERTEX[1,], gfi$WEIGHT)
 plot(f, xlim = c(40,65))

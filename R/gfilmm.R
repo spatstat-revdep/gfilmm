@@ -19,7 +19,7 @@
 #'
 #' @examples
 #' h <- 0.01
-#' gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, N=500)
+#' gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N=500)
 #' library(spatstat) # to use ewcdf 
 #' f <- ewcdf(gfi$VERTEX[1,], gfi$WEIGHT)
 #' plot(f, xlim = c(40,65))
@@ -27,27 +27,27 @@
 gfilmm <- function(y, fixed, random, data, N, thresh=N/2){
   data <- droplevels(data)
   Y <- f_eval_rhs(y, data = data)
+  n <- nrow(Y)
   yl <- Y[,1L]; yu <- Y[,2L]
   FE <- model.matrix(fixed, data = data)
-  tf <- terms.formula(random)
-  factors <- rownames(attr(tf, "factors"))
-  tvars <- attr(tf, "variables")
-  tlabs <- attr(tf, "term.labels")
-  rdat <- lapply(eval(tvars, envir = data), as.factor)
-  names(rdat) <- factors
-  # laz <- as.lazy(tlabs[1L], env = rdat) 
-  # eval(laz$expr, envir = laz$env)
-  # lazy_eval(as.lazy(tlabs[3L]), data = rdat)
-  RE <- lapply(tlabs, function(tlab){
-    droplevels(lazy_eval(as.lazy(tlab), data = rdat))
-  })
-  
-  n <- nrow(Y)
-  re <- length(RE)+1L 
-
-  E <- c(vapply(RE, nlevels, integer(1L)), n)
-  
+  if(!is.null(random)){
+    tf <- terms.formula(random)
+    factors <- rownames(attr(tf, "factors"))
+    tvars <- attr(tf, "variables")
+    tlabs <- attr(tf, "term.labels")
+    rdat <- lapply(eval(tvars, envir = data), as.factor)
+    names(rdat) <- factors
+    # laz <- as.lazy(tlabs[1L], env = rdat) 
+    # eval(laz$expr, envir = laz$env)
+    # lazy_eval(as.lazy(tlabs[3L]), data = rdat)
+    RE <- lapply(tlabs, function(tlab){
+      droplevels(lazy_eval(as.lazy(tlab), data = rdat))
+    })
+  }else{
+    RE <- NULL
+  }
   RE2 <- c(RE, list(error = factor(1L:n))) #Adds the error effect 
+  E <- c(vapply(RE, nlevels, integer(1L)), n)
   RE <- NULL 
   for(i in seq_along(E)){ # Builds an indicator RE matrix for the effects
     re_levels <- levels(RE2[[i]])
@@ -59,7 +59,10 @@ gfilmm <- function(y, fixed, random, data, N, thresh=N/2){
     }
   } 
   RE2 <- vapply(RE2, as.integer, integer(n)) - 1L
-  gfilmm_(yl, yu, FE, RE, RE2, E, N, thresh)
+  gfi <- gfilmm_(yl, yu, FE, RE, RE2, E, N, thresh)
+  rownames(gfi$VERTEX) <- 
+    c(colnames(FE), paste0("sigma_", tlabs), "sigma_error")
+  gfi
 }
 
 ######################

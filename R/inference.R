@@ -27,8 +27,8 @@ inference <- function(gfi, v, alpha=0.05){
 #' @examples
 #' data(KM41)
 #' h <- 0.005
-#' gfi <- gfilmm(~ cbind(y-h, y+h), ~ 1, ~ Batch, data = KM41, N = 500)
-#' gfiSummary(gfi)
+#' # gfi <- gfilmm(~ cbind(y-h, y+h), ~ 1, ~ Batch, data = KM41, N = 500)
+#' # gfiSummary(gfi)
 gfiSummary <- function(gfi, conf = 0.95){
   seq_ <- 1L:nrow(gfi$VERTEX)
   names(seq_) <- rownames(gfi$VERTEX)

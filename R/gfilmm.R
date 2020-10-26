@@ -24,13 +24,13 @@
 #' @examples h <- 0.01
 #' gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N=5000)
 #' # fiducial cumulative distribution function of the intercept:
-#' f <- ewcdf(gfi$VERTEX["(Intercept)",], gfi$WEIGHT)
+#' f <- ewcdf(gfi$VERTEX[["(Intercept)"]], gfi$WEIGHT)
 #' plot(f, xlim = c(40, 65))
 #' # fiducial confidence interval of the intercept:
 #' quantile(f, c(0.025, 0.975))
 #' # fiducial density function of the intercept:
 #' library(kde1d)
-#' kfit <- kde1d(gfi$VERTEX["(Intercept)",], weights = gfi$WEIGHT)
+#' kfit <- kde1d(gfi$VERTEX[["(Intercept)"]], weights = gfi$WEIGHT)
 #' curve(dkde1d(x, kfit), from = 45, to = 65)
 gfilmm <- function(y, fixed, random, data, N, thresh=N/2){
   data <- droplevels(data)
@@ -107,6 +107,7 @@ gfilmm <- function(y, fixed, random, data, N, thresh=N/2){
   gfi <- gfilmm_(yl, yu, FE, RE, RE2, E, N, thresh)
   rownames(gfi$VERTEX) <-
     c(colnames(FE), paste0("sigma_", c(tlabs, "error")))
+  gfi$VERTEX <- as.data.frame(t(gfi$VERTEX))
   attr(gfi, "effects") <- c(fixed = ncol(FE), random = ncol(RE2))
   gfi
 }

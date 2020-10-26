@@ -1,7 +1,7 @@
 inference <- function(gfi, v, alpha=0.05){ 
   out <- numeric(5L)
   names(out) <- c("mean", "median", "lwr", "upr", "Pr(=0)")
-  vertices <- gfi$VERTEX[v,]
+  vertices <- gfi$VERTEX[[v]]
   weights <- gfi$WEIGHT
   out[1L] <- sum(vertices*weights) # mean
   h <- cbind(vertices,weights)
@@ -42,8 +42,8 @@ inference <- function(gfi, v, alpha=0.05){
 #' gfi <- gfilmm(~ cbind(y-h, y+h), ~ 1, ~ Batch, data = KM41, N = 5000)
 #' gfiSummary(gfi)
 gfiSummary <- function(gfi, conf = 0.95){
-  seq_ <- 1L:nrow(gfi$VERTEX)
-  names(seq_) <- rownames(gfi$VERTEX)
+  seq_ <- 1L:ncol(gfi$VERTEX)
+  names(seq_) <- names(gfi$VERTEX)
   out <- t(vapply(seq_, function(v) inference(gfi, v, 1-conf), numeric(5L)))
   attr(out, "confidence level") <- conf
   out
@@ -68,9 +68,8 @@ gfiSummary <- function(gfi, conf = 0.95){
 #' gfiConfInt(~ (sigma_block + sigma_error)/`(Intercept)`, gfi)
 gfiConfInt <- function(parameter, gfi, conf = 0.95){#, side = "two-sided"){
   #side <- match.arg(side, c("two-sided", "left", "right"))
-  vertices <- as.data.frame(t(gfi$VERTEX))
-  fsims <- f_eval_rhs(parameter, data = vertices)
+  fsims <- f_eval_rhs(parameter, data = gfi$VERTEX)
   fcdf <- ewcdf(fsims, weights = gfi$WEIGHT)
   alpha <- 1 - conf
-  quantile(fcdf, c(alpha/2, 1-alpha/2))
+  quantile.ewcdf(fcdf, c(alpha/2, 1-alpha/2))
 }

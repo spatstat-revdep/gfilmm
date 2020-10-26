@@ -44,6 +44,6 @@ curve(dkde1d(x, kfit), from = 45, to = 65)
 }
 \references{
 J. Cisewski and J.Hannig. 
-\emph{Generalized fiducial inference for normal linear mixed models}. 
-The Annals of Statistics 2012, Vol. 40, No. 4, 2102–2127.
+  \emph{Generalized fiducial inference for normal linear mixed models}. 
+  The Annals of Statistics 2012, Vol. 40, No. 4, 2102–2127.
 }

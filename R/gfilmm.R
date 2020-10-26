@@ -18,8 +18,8 @@
 #' @export
 #' 
 #' @references J. Cisewski and J.Hannig. 
-#' \emph{Generalized fiducial inference for normal linear mixed models}. 
-#' The Annals of Statistics 2012, Vol. 40, No. 4, 2102–2127.
+#'   \emph{Generalized fiducial inference for normal linear mixed models}. 
+#'   The Annals of Statistics 2012, Vol. 40, No. 4, 2102–2127.
 #'
 #' @examples h <- 0.01
 #' gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N=5000)
@@ -36,15 +36,39 @@
 gfilmm <- function(y, fixed, random, data, N, thresh=N/2){
   data <- droplevels(data)
   Y <- f_eval_rhs(y, data = data)
+  if(!is.matrix(Y) || ncol(Y) != 2L){
+    stop(
+      "`y` must be a right-sided formula of the form `~ cbind(lower, upper)`."
+    )
+  }
+  if(!is.numeric(Y)){
+    stop(
+      "Invalid `y` argument: the response must be given by two numerical ",
+      "columns of the data."
+    )
+  }
   n <- nrow(Y)
   yl <- Y[,1L]; yu <- Y[,2L]
+  if(any(yl >= yu)){
+    stop(
+      "Invalid interval data: found some values in the first column higher ",
+      "than the corresponding values in the second column."
+    )
+  }
   FE <- model.matrix(fixed, data = data)
   if(!is.null(random)){
     tf <- terms.formula(random)
     factors <- rownames(attr(tf, "factors"))
     tvars <- attr(tf, "variables")
     tlabs <- attr(tf, "term.labels")
-    rdat <- lapply(eval(tvars, envir = data), as.factor)
+    tvars <- eval(tvars, envir = data)
+    numerical <- vapply(tvars, is.numeric, logical(1L))
+    if(any(numerical)){
+      warning(
+        "Numeric random effects are not supported; converting to factors."
+      )
+    }
+    rdat <- lapply(tvars, as.factor)
     names(rdat) <- factors
     # laz <- as.lazy(tlabs[1L], env = rdat) 
     # eval(laz$expr, envir = laz$env)

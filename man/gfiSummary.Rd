@@ -20,6 +20,6 @@ Summary of fiducial distributions
 \examples{
 data(KM41)
 h <- 0.005
-# gfi <- gfilmm(~ cbind(y-h, y+h), ~ 1, ~ Batch, data = KM41, N = 500)
-# gfiSummary(gfi)
+gfi <- gfilmm(~ cbind(y-h, y+h), ~ 1, ~ Batch, data = KM41, N = 5000)
+gfiSummary(gfi)
 }

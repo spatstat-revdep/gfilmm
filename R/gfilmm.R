@@ -22,7 +22,7 @@
 #' The Annals of Statistics 2012, Vol. 40, No. 4, 2102–2127.
 #'
 #' @examples h <- 0.01
-#' gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N=500)
+#' gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N=5000)
 #' # fiducial cumulative distribution function of the intercept:
 #' library(spatstat) # to use ewcdf 
 #' f <- ewcdf(gfi$VERTEX["(Intercept)",], gfi$WEIGHT)

@@ -12,7 +12,8 @@ gfiSummary(gfi, conf = 0.95)
 \item{conf}{confidence level}
 }
 \value{
-Summary statistics in a matrix.
+A matrix with summary statistics: means, medians, confidence 
+  intervals, and probabilities that the standard deviations equal 0.
 }
 \description{
 Summary of fiducial distributions

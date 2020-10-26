@@ -96,6 +96,7 @@ gfilmm <- function(y, fixed, random, data, N, thresh=N/2){
   gfi <- gfilmm_(yl, yu, FE, RE, RE2, E, N, thresh)
   rownames(gfi$VERTEX) <-
     c(colnames(FE), paste0("sigma_", c(tlabs, "error")))
+  attr(gfi, "effects") <- c(fixed = ncol(FE), random = ncol(RE2))
   gfi
 }
 

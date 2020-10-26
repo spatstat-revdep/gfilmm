@@ -1,18 +1,29 @@
 inference <- function(gfi, v, alpha=0.05){ 
-  out <- numeric(4L)
-  names(out) <- c("mean","median","low","up")
-  vertex <- gfi$VERTEX[v,]
-  weight <- gfi$WEIGHT
-  out[1] <- sum(vertex*weight) # mean
-  h <- cbind(vertex,weight)
+  out <- numeric(5L)
+  names(out) <- c("mean", "median", "lwr", "upr", "Pr(=0)")
+  vertices <- gfi$VERTEX[v,]
+  weights <- gfi$WEIGHT
+  out[1L] <- sum(vertices*weights) # mean
+  h <- cbind(vertices,weights)
   hsort <- h[order(h[,1L]),] # gx.sort(h,1L)
   hsum <- cumsum(hsort[,2L])
   ci_u <- min(which(hsum >= 1-alpha/2)) 
   ci_l <- min(which(hsum >= alpha/2))   
   ci_m <- min(which(hsum >= 0.5))
-  out[3] <- hsort[ci_l,1L] # lower bound
-  out[4] <- hsort[ci_u,1L] # upper bound
-  out[2] <- hsort[ci_m,1L] # estimate (median)
+  out[3L] <- hsort[ci_l,1L] # lower bound
+  out[4L] <- hsort[ci_u,1L] # upper bound
+  out[2L] <- hsort[ci_m,1L] # estimate (median)
+  fe <- attr(gfi, "effects")[["fixed"]]
+  if(v <= fe){
+    out[5L] <- NA_real_
+  }else{
+    zeros <- vertices == 0
+    if(any(zeros)){
+      out[5L] <- sum(weights[zeros])
+    }else{
+      out[5L] <- 0
+    }
+  }
   out
 }
 
@@ -21,7 +32,8 @@ inference <- function(gfi, v, alpha=0.05){
 #' @param gfi output of \code{\link{gfilmm}}
 #' @param conf confidence level
 #'
-#' @return Summary statistics in a matrix.
+#' @return A matrix with summary statistics: means, medians, confidence 
+#'   intervals, and probabilities that the standard deviations equal 0.
 #' @export
 #'
 #' @examples
@@ -32,5 +44,7 @@ inference <- function(gfi, v, alpha=0.05){
 gfiSummary <- function(gfi, conf = 0.95){
   seq_ <- 1L:nrow(gfi$VERTEX)
   names(seq_) <- rownames(gfi$VERTEX)
-  t(vapply(seq_, function(v) inference(gfi, v, 1-conf), numeric(4L)))
+  out <- t(vapply(seq_, function(v) inference(gfi, v, 1-conf), numeric(5L)))
+  attr(out, "confidence level") <- conf
+  out
 }

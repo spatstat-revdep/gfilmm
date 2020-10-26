@@ -80,6 +80,12 @@ gfilmm <- function(y, fixed, random, data, N, thresh=N/2){
         "Random effects with only one level are not allowed."
       )
     }
+    loneLevel <- vapply(rdat, function(x) any(table(x) == 1L), logical(1L))
+    if(any(loneLevel)){
+      stop(
+        "Found a random effect with a lone level."
+      )
+    }
     names(rdat) <- factors
     # laz <- as.lazy(tlabs[1L], env = rdat) 
     # eval(laz$expr, envir = laz$env)

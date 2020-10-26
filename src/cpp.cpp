@@ -440,19 +440,19 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
       AT = Atemp;
       //r = rankMatrix(AT);
       r += 1;
-      Rcpp::Rcout << "The value of r : " << r << "\n";
+      // Rcpp::Rcout << "The value of r : " << r << "\n";
       C.push_back((int)i);
     }else{
       K.push_back((int)i);
     }
   }
 
-  Rcpp::Rcout << "Line : " << 451 << "\n";
+  // Rcpp::Rcout << "Line : " << 451 << "\n";
   
   Eigen::VectorXi K_start = 
     Eigen::Map<Eigen::VectorXi, Eigen::Unaligned>(C.data(), Dim);
   for(size_t i=0; i<n-Dim; i++){
-    Rcpp::Rcout << "Line 456, i: " << i << "\n";
+    // Rcpp::Rcout << "Line 456, i: " << i << "\n";
     for(size_t j=0; j<N; j++){
       Z.at(re-1)(K.at(i),j) = 0.0;
     }
@@ -460,13 +460,13 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
   
   //-------- FIND INITIAL VERTICES ---------------------------------------------
   std::vector<std::vector<int>> USE = combinations(C,n);
-  Rcpp::Rcout << "USE.size: " << USE.size() << "\n";
-  Rcpp::Rcout << "USE[0].size: " << USE[0].size() << "\n";
+  // Rcpp::Rcout << "USE.size: " << USE.size() << "\n";
+  // Rcpp::Rcout << "USE[0].size: " << USE[0].size() << "\n";
   for(size_t rrr=0; rrr < USE.size(); rrr++){
     for(size_t ccc = 0; ccc < USE[0].size(); ccc++){
-      Rcpp::Rcout << USE[rrr][ccc] << " --- ";
+      // Rcpp::Rcout << USE[rrr][ccc] << " --- ";
     }
-    Rcpp::Rcout << "\n";
+    // Rcpp::Rcout << "\n";
   }
   size_t twoPowerDim = spow(2, Dim);
   Eigen::MatrixXi tUSE = vv2matrix(USE, Dim, twoPowerDim);
@@ -475,10 +475,10 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
   b << U, -L;
   Eigen::MatrixXd FEFE(2*n,fe);
   FEFE << FE,-FE;
-  Rcpp::Rcout << "Line : " << 471 << "\n";
+  // Rcpp::Rcout << "Line : " << 471 << "\n";
   
   for(size_t k=0; k<N; k++){ // k=0 ou 1?
-    //Rcpp::Rcout << "k = " << k << "\n";
+    //// Rcpp::Rcout << "k = " << k << "\n";
     Eigen::MatrixXd V(Dim, twoPowerDim);
     Eigen::MatrixXd AkAk(2*n,re);
     AkAk << A.at(k), -A.at(k);
@@ -493,13 +493,13 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
           AAuse(j,l) = AA(USE.at(i).at(j),l);
         }
       }  
-      Rcpp::Rcout << "SOLVE ? /// i = " << i << " ///***/// ";
+      // Rcpp::Rcout << "SOLVE ? /// i = " << i << " ///***/// ";
       V.col(i) = solve(AAuse, buse);
-      Rcpp::Rcout << "SOLVED!!!" << "\n";
+      // Rcpp::Rcout << "SOLVED!!!" << "\n";
       for(size_t iii = 0; iii < Dim; iii++){
-        Rcpp::Rcout << "V.col(i)(" << iii << ") = " << V.col(i)(iii) << " --- "; 
+        // Rcpp::Rcout << "V.col(i)(" << iii << ") = " << V.col(i)(iii) << " --- "; 
       }
-      Rcpp::Rcout << "\n";
+      // Rcpp::Rcout << "\n";
     }
     //VT[k].resize(Dim,twoPowerDim);
     VT.at(k) = V; 
@@ -508,7 +508,7 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
   
   //-------- MAIN ALGORITHM ----------------------------------------------------
   //double break_point = 10;
-  Rcpp::Rcout << "Line : " << 496 << "\n";
+  // Rcpp::Rcout << "Line : " << 496 << "\n";
   
   double lengthK = (double)(n-Dim);
   size_t K_n = (size_t)(ceil(lengthK/10.0));
@@ -521,7 +521,7 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
   K_temp.at(K_n-1) = KV.tail(n-Dim-(K_n-1)*10);
   Eigen::VectorXi K1(0);
   for(size_t k_n=0; k_n<K_n; k_n++){
-    Rcpp::Rcout << "Line 509, k_n: " << k_n << "\n";
+    // Rcpp::Rcout << "Line 509, k_n: " << k_n << "\n";
     
     K1.conservativeResize(K1.size()+K_temp.at(k_n).size());
     K1.tail(K_temp.at(k_n).size()) = K_temp.at(k_n);
@@ -536,31 +536,31 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
           }
         }
       }
-      Rcpp::Rcout << "Line : " << 524 << "\n";
+      // Rcpp::Rcout << "Line : " << 524 << "\n";
       
       for(size_t i=0; i<N; i++){
         Eigen::MatrixXd VTi = VT.at(i); 
-        Rcpp::Rcout << "VTi.topRows --- ";
+        // Rcpp::Rcout << "VTi.topRows --- ";
         Eigen::MatrixXd VT1 = VTi.topRows(Dimm1);
         Eigen::VectorXd VT2 = VTi.row(Dimm1);
-        Rcpp::Rcout << "OKAY\n";
-        Rcpp::Rcout << "k: " << k << "\n";
+        // Rcpp::Rcout << "OKAY\n";
+        // Rcpp::Rcout << "k: " << k << "\n";
         Eigen::VectorXd Z1t(re-1);
         for(size_t j=0; j<re-1; j++){
-          Rcpp::Rcout << "RE2(k,j): " << RE2(k,j) << "\n";
-          Rcpp::Rcout << "Z.at(j) nrows: " << Z.at(j).rows() << "\n";
-          Rcpp::Rcout << "Z.at(j) ncols: " << Z.at(j).cols() << "\n";
+          // Rcpp::Rcout << "RE2(k,j): " << RE2(k,j) << "\n";
+          // Rcpp::Rcout << "Z.at(j) nrows: " << Z.at(j).rows() << "\n";
+          // Rcpp::Rcout << "Z.at(j) ncols: " << Z.at(j).cols() << "\n";
           Z1t(j) = Z.at(j)(RE2(k,j),i);
-          Rcpp::Rcout << "OKAY\n";
+          // Rcpp::Rcout << "OKAY\n";
         }
         Eigen::VectorXd Z1(Dimm1); 
         Z1 << FE.row(k).transpose(), Z1t;
-        Rcpp::Rcout << "OOOOOKAY\n";
+        // Rcpp::Rcout << "OOOOOKAY\n";
         Eigen::VectorXd VTsum = VT1.transpose() * Z1;
 
-        Rcpp::Rcout << "fidSample --- ";
+        // Rcpp::Rcout << "fidSample --- ";
         std::vector<double> sample = fidSample(VT2, VTsum, L(k), U(k));
-        Rcpp::Rcout << "OKAY\n";
+        // Rcpp::Rcout << "OKAY\n";
         
         double ZZ = sample[0];
         double wt = sample[1];
@@ -754,17 +754,17 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
         CC.at(i) = CCtemp;
         VT.at(i) = VTtemp;
       }
-      Rcpp::Rcout << "Line : " << 731 << "\n";
+      // Rcpp::Rcout << "Line : " << 731 << "\n";
       
       Eigen::VectorXd WT(N);
       for(size_t j=0; j<N; j++){
         WT(j) = weight.col(j).prod();
       }
       double WTsum = WT.sum();
-      Rcpp::Rcout << "Line 737, WTsum : " << WTsum << "\n";
+      // Rcpp::Rcout << "Line 737, WTsum : " << WTsum << "\n";
       WTnorm = WT/WTsum;
       ESS(k) = 1/(WTnorm.dot(WTnorm));
-      Rcpp::Rcout << "Line 740, ESS(k) : " << ESS(k) << "\n";
+      // Rcpp::Rcout << "Line 740, ESS(k) : " << ESS(k) << "\n";
       
       if(ESS(k)<thresh && k < K.at(n-Dim-1)){
         std::vector<size_t> N_sons(N,0);
@@ -827,7 +827,7 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
                   Eigen::MatrixXd XX(lenJJ, 0);
                   for(size_t jj=0; jj<re; jj++){
                     if(jj != kk){
-                      //Rcpp::Rcout << "Line 803, jj!=kk : " << "\n";
+                      //// Rcpp::Rcout << "Line 803, jj!=kk : " << "\n";
                       XX.conservativeResize(Eigen::NoChange, XX.cols()+1);
                       Eigen::VectorXd newcol(lenJJ);
                       newcol = 
@@ -882,14 +882,14 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
                   Eigen::FullPivLU<Eigen::MatrixXd> lu(MAT);
                   int rk = lu.rank();
                   if(rk < MAT.cols()){
-                    Rcpp::Rcout << "////*** NUL ***////\n";
+                    // Rcpp::Rcout << "////*** NUL ***////\n";
                     Eigen::MatrixXd NUL = lu.kernel();
                     Eigen::MatrixXd n1 = NUL.topRows(NUL.rows()-ncolsCO2);
                     Eigen::MatrixXd n2 = NUL.bottomRows(ncolsCO2);
-                    Rcpp::Rcout << "nrows: " << n2.rows() << " --- ncols: " << n2.cols() << "\n";
-                    Rcpp::Rcout << "QQQQQRdecomp ? --- ";
+                    // Rcpp::Rcout << "nrows: " << n2.rows() << " --- ncols: " << n2.cols() << "\n";
+                    // Rcpp::Rcout << "QQQQQRdecomp ? --- ";
                     Rcpp::List QR = QRdecomp(n2);
-                    Rcpp::Rcout << "OOOOK\n";
+                    // Rcpp::Rcout << "OOOOK\n";
                     Eigen::MatrixXd O2 = QR["Q"];
                     Eigen::MatrixXd R = QR["R"];
                     Eigen::MatrixXd O1 = tsolveAndMultiply(R, n1);
@@ -969,10 +969,10 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
         CC = CCCC;
         weight = Eigen::MatrixXd::Ones(n,N);
       }
-      Rcpp::Rcout << "Line : " << 940 << "\n";
+      // Rcpp::Rcout << "Line : " << 940 << "\n";
       
     }
-    Rcpp::Rcout << "Line : " << 943 << "\n";
+    // Rcpp::Rcout << "Line : " << 943 << "\n";
     
     //------------determine signs ----------------------------------------------
     Eigen::MatrixXi signs = Eigen::MatrixXi::Zero(re,N);
@@ -991,7 +991,7 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
         }
       }
     }
-    Rcpp::Rcout << "Line : " << 962 << "\n";
+    // Rcpp::Rcout << "Line : " << 962 << "\n";
     
     //--------FINAL RESAMPLE ---------------------------------------------------
     std::vector<Eigen::MatrixXd> ZZ(re); // resized below
@@ -1002,7 +1002,7 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
     n1_ << K1,K_start;
     Eigen::VectorXi n1 = Vsort(n1_);
     for(size_t ii=0; ii<re; ii++){
-      Rcpp::Rcout << "Line : " << 973 << "\n";
+      // Rcpp::Rcout << "Line : " << 973 << "\n";
       
       Eigen::VectorXi vec(n1.size());
       for(int jj=0; jj<n1.size(); jj++){
@@ -1013,7 +1013,7 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
       
       ZZ.at(ii).resize(lengths_nn.at(ii), 0);
     }
-    Rcpp::Rcout << "Line : " << 984 << "\n";
+    // Rcpp::Rcout << "Line : " << 984 << "\n";
     
     for(size_t i=0; i<N; i++){
       Eigen::MatrixXd VTtemp = VT.at(i);
@@ -1053,20 +1053,20 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
         int rk = lu.rank();
         if(rk < MAT.cols()){
           Eigen::MatrixXd NUL = lu.kernel();
-          Rcpp::Rcout << "*** NUL ***\n";
+          // Rcpp::Rcout << "*** NUL ***\n";
           Eigen::MatrixXd n1 = NUL.topRows(NUL.rows()-ncolsCO2);
           Eigen::MatrixXd n2 = NUL.bottomRows(ncolsCO2);
-          Rcpp::Rcout << "nrows: " << n2.rows() << " --- ncols: " << n2.cols() << "\n";
-          Rcpp::Rcout << "QRdecomp ? --- ";
+          // Rcpp::Rcout << "nrows: " << n2.rows() << " --- ncols: " << n2.cols() << "\n";
+          // Rcpp::Rcout << "QRdecomp ? --- ";
           Rcpp::List QR = QRdecomp(n2);
-          Rcpp::Rcout << "OK\n";
+          // Rcpp::Rcout << "OK\n";
           Eigen::MatrixXd O2 = QR["Q"];
           Eigen::MatrixXd R = QR["R"];
           Eigen::MatrixXd O1 = tsolveAndMultiply(R, n1);
           int rankO2 = O2.cols();
-          Rcpp::Rcout << "lenZ1: " << lenZ1 << "\n";
-          Rcpp::Rcout << "rankO2: " << rankO2 << "\n";
-          Rcpp::Rcout << "rankMatrix(O2): " << rankMatrix(O2) << "\n";
+          // Rcpp::Rcout << "lenZ1: " << lenZ1 << "\n";
+          // Rcpp::Rcout << "rankO2: " << rankO2 << "\n";
+          // Rcpp::Rcout << "rankMatrix(O2): " << rankMatrix(O2) << "\n";
           Eigen::VectorXd a(rankO2);
           a = O2.transpose() * Z1;
           Eigen::VectorXd O2a(lenZ1); 
@@ -1112,7 +1112,7 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
       }
       VTVT.at(i) = VTtemp;
     }
-    Rcpp::Rcout << "Line : " << 1076 << "\n";
+    // Rcpp::Rcout << "Line : " << 1076 << "\n";
     
     Z = ZZ; 
     VT = VTVT;
@@ -1126,17 +1126,17 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
         }
       }
     }
-    Rcpp::Rcout << "Line : " << 1090 << "\n";
+    // Rcpp::Rcout << "Line : " << 1090 << "\n";
     
     if(k_n == K_n-1){ //if finished pick coordinates		
-      Rcpp::Rcout << "Line : " << 1093 << "\n";
+      // Rcpp::Rcout << "Line : " << 1093 << "\n";
       
       Eigen::MatrixXd unif = umatrix(Dim, N); 
       VERTEX = pickCoordinates(Dim, N, fe, VT, unif);
     }
     
   }
-  Rcpp::Rcout << "Line : " << 1100 << "\n";
+  // Rcpp::Rcout << "Line : " << 1100 << "\n";
   
   return Rcpp::List::create(Rcpp::Named("VERTEX") = VERTEX,
                             Rcpp::Named("WEIGHT") = WTnorm, 

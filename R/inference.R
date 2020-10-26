@@ -65,7 +65,7 @@ gfiSummary <- function(gfi, conf = 0.95){
 #'
 #' @examples h <- 0.01
 #' gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N=5000)
-#' gfiConfInt(~ (sigma_block + sigma_error)/`(Intercept)`, gfi)
+#' gfiConfInt(~ sqrt(sigma_block^2 + sigma_error^2)/`(Intercept)`, gfi)
 gfiConfInt <- function(parameter, gfi, conf = 0.95){#, side = "two-sided"){
   #side <- match.arg(side, c("two-sided", "left", "right"))
   fsims <- f_eval_rhs(parameter, data = gfi$VERTEX)

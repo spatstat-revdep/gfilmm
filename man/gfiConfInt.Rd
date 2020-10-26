@@ -23,5 +23,5 @@ Fiducial confidence interval.
 \examples{
 h <- 0.01
 gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N=5000)
-gfiConfInt(~ (sigma_block + sigma_error)/`(Intercept)`, gfi)
+gfiConfInt(~ sqrt(sigma_block^2 + sigma_error^2)/`(Intercept)`, gfi)
 }

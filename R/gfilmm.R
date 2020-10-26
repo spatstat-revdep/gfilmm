@@ -56,6 +56,12 @@ gfilmm <- function(y, fixed, random, data, N, thresh=N/2){
     )
   }
   FE <- model.matrix(fixed, data = data)
+  fullrank <- qr(FE)$rank == ncol(FE)
+  if(!fullrank){
+    stop(
+      "The design matrix of the fixed effects is not of full rank."
+    )
+  }
   if(!is.null(random)){
     tf <- terms.formula(random)
     factors <- rownames(attr(tf, "factors"))
@@ -68,7 +74,13 @@ gfilmm <- function(y, fixed, random, data, N, thresh=N/2){
         "Numeric random effects are not supported; converting to factors."
       )
     }
-    rdat <- lapply(tvars, as.factor)
+    rdat <- lapply(tvars, function(tvar) droplevels(as.factor))
+    degenerate <- vapply(rdat, function(x) nlevels(x) == 1L)
+    if(any(degenerate)){
+      stop(
+        "Random effects with only one level are not allowed."
+      )
+    }
     names(rdat) <- factors
     # laz <- as.lazy(tlabs[1L], env = rdat) 
     # eval(laz$expr, envir = laz$env)

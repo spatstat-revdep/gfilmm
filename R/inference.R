@@ -48,3 +48,29 @@ gfiSummary <- function(gfi, conf = 0.95){
   attr(out, "confidence level") <- conf
   out
 }
+
+
+#' Fiducial confidence interval
+#' @description Fiducial confidence interval.
+#'
+#' @param parameter a right-sided formula defining the paramter of interest, 
+#'   like \code{~ sigma_error/`(Intercept)`}
+#' @param gfi the output of \code{\link{gfilmm}}
+#' @param conf confidence level
+#'
+#' @return The fiducial confidence interval of the parameter.
+#' 
+#' @importFrom lazyeval f_eval_rhs
+#' @export
+#'
+#' @examples h <- 0.01
+#' gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N=5000)
+#' gfiConfInt(~ (sigma_block + sigma_error)/`(Intercept)`, gfi)
+gfiConfInt <- function(parameter, gfi, conf = 0.95){#, side = "two-sided"){
+  #side <- match.arg(side, c("two-sided", "left", "right"))
+  vertices <- as.data.frame(t(gfi$VERTEX))
+  fsims <- f_eval_rhs(parameter, data = vertices)
+  fcdf <- ewcdf(fsims, weights = gfi$WEIGHT)
+  alpha <- 1 - conf
+  quantile(fcdf, c(alpha/2, 1-alpha/2))
+}

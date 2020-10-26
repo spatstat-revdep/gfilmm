@@ -10,6 +10,8 @@ confint_CV           <- matrix(NA_real_, nrow = nsims, ncol = 2L)
 mu           <- 10000 # grand mean
 sigmaBetween <- 2
 sigmaWithin  <- 3
+sigmaTotal   <- sqrt(sigmaBetween^2 + sigmaWithin^2)
+CV           <- sigmaTotal / mu
 n            <- 8L # sample size per group
 
 for(i in 1L:nsims){
@@ -32,3 +34,14 @@ for(i in 1L:nsims){
   confint_CV[i,]           <- 
     gfiConfInt(~ sqrt(sigma_group^2 + sigma_error^2)/`(Intercept)`, gfi)
 }
+
+
+results <- list(
+  grandMean = confint_grandMean,
+  sigmaWithin = confint_sigmaWithin,
+  sigmaBetween = confint_sigmaBetween,
+  sigmaTotal = confint_sigmaTotal,
+  CV = confint_CV
+)
+
+saveRDS(results, "~/Work/R/gfilmm/inst/essais/simulations01.rds")

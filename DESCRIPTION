@@ -7,7 +7,10 @@ Authors@R: c(
     person("Stéphane", "Laurent", role = c("aut", "cre"),
            email = "laurent_step@outlook.fr"),
     person("Jessi", "Cisewski", role = c("aut", "ctb"), 
-           comment = "Author of the original Matlab code")
+           comment = c(
+             "author of the original Matlab code",
+             ORCID = "0000-0002-9656-2272"
+           ))
   )
 Description: Simulation of the generalized fiducial distribution for normal linear mixed models with interval data. Cisewski and Hannig (2012) <doi:10.1214/12-AOS1030>.
 License: GPL-3

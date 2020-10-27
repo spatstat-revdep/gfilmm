@@ -12,11 +12,14 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  warning = FALSE,
+  fig.width = 5, 
+  fig.height = 4.5
 )
 ```
 
-# What does it do?
+## What does it do?
 
 The 'gfilmm' package allows to generate simulations from the generalized 
 fiducial distribution of the parameters of a Gaussian linear mixed model with 
@@ -29,7 +32,16 @@ The algorithm implemented in 'gfilmm' is the one described in the paper
 Jessi Cisewski and Jan Hannig. It is coded in C++ and the code is based on the 
 original Matlab code written by Jessi Cisewski.
 
-# First example: a non-mixed linear model
+Fiducial inference has something similar to Bayesian inference: the 
+uncertainty about the parameters are represented by a distribution, the 
+fiducial distribution, with the help of which we conduct inference on the 
+parameters in a way similar to the Bayesian way, based on the posterior 
+distribution of the parameters. The main difference is that there is no prior 
+distribution (so fiducial inference is similar to *objective* Bayesian 
+inference). The fiducial inference yields results close to frequentist 
+inference. 
+
+## First example: a non-mixed linear model
 
 The data must be given as a dataframe. Here we simulate data from a simple 
 linear regression model:
@@ -56,7 +68,7 @@ fidSims <- gfilmm(
   fixed = ~ x,             # fixed effects
   random = NULL,           # random effects
   data = dat,              # data
-  N = 500                # number of simulations
+  N = 10000L               # number of simulations
 )
 ```
 
@@ -88,7 +100,7 @@ kfit <- kde1d(fidSims$VERTEX[["x"]], weights = fidSims$WEIGHT, mult = 4)
 curve(dkde1d(x, kfit), from = 0.7, to = 1.1)
 ```
 
-# A mixed model
+## A mixed model
 
 Now let us simulate some data from a one-way ANOVA model with a random factor:
 
@@ -96,8 +108,6 @@ Now let us simulate some data from a one-way ANOVA model with a random factor:
 mu           <- 10000 # grand mean
 sigmaBetween <- 2
 sigmaWithin  <- 3
-sigmaTotal   <- sqrt(sigmaBetween^2 + sigmaWithin^2)
-CV           <- sigmaTotal / mu # coefficient of total variation
 n            <- 8L # sample size per group
 
 set.seed(666)
@@ -116,7 +126,7 @@ dat        <- data.frame(
 We run the fiducial sampler:
 
 ```{r gfilmm_AOV1R}
-fidSims <- gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = 500L)
+fidSims <- gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = 10000L)
 ```
 
 Observe that the between standard deviation `sigma_group` has a positive value 

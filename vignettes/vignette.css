@@ -1,0 +1,16 @@
+body {
+  font-family: "Trebuchet MS", Helvetica, sans-serif;
+}
+
+p {
+  text-align: justify;
+}
+
+code span.co {
+  color: darkmagenta;
+}
+
+div.sourceCode {
+  background-color: seashell;
+  margin-left: 1em;
+}

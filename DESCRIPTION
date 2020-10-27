@@ -13,8 +13,12 @@ Description: Simulation of the generalized fiducial distributions for normal lin
 License: GPL-3
 Depends: R (>= 3.1.0)
 Imports: Rcpp (>= 1.0.0), lazyeval, stats, spatstat
-Suggests: kde1d
+Suggests: 
+    kde1d,
+    knitr,
+    rmarkdown
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.1.1
 Encoding: UTF-8
 LazyData: true
+VignetteBuilder: knitr

@@ -1,0 +1,75 @@
+---
+title: "The 'gfilmm' package"
+output: 
+  rmarkdown::html_vignette:
+    css: vignette.css
+vignette: >
+  %\VignetteIndexEntry{The 'gfilmm' package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# What does it do?
+
+The 'gfilmm' package allows to generate simulations from the generalized 
+fiducial distribution of the parameters of a Gaussian linear mixed model with 
+categorical random effects (numeric random effects are not supported) and 
+interval data. It also provides some helper functions to get summary statistics 
+and confidence intervals.
+
+The algorithm implemented in 'gfilmm' is the one described in the paper 
+*Generalized fiducial inference for normal linear mixed models* written by 
+Jessi Cisewski and Jan Hannig. It is coded in C++ and the code is based on the 
+original Matlab code written by Jessi Cisewski.
+
+# First example: a non-mixed linear model
+
+The data must be given as a dataframe. Here we simulate data from a simple 
+linear regression model:
+
+```{r simulations_linreg}
+set.seed(666)
+n <- 30L
+x <- 1L:n
+y <- rnorm(n, mean = x, sd = 2)
+y_rounded <- round(y, digits = 1L)
+dat <- data.frame(
+  ylwr = y_rounded - 0.05,
+  yupr = y_rounded + 0.05,
+  x = x
+)
+```
+
+Now we run the fiducial sampler:
+
+```{r gfi_linreg}
+library(gfilmm)
+fidSims <- gfilmm(
+  y = ~ cbind(ylwr, yupr), # interval data
+  fixed = ~ x,             # fixed effects
+  random = NULL,           # random effects
+  data = dat,              # data
+  N = 500                # number of simulations
+)
+```
+
+A summary of the fiducial simulations (the `Pr(=0)` column will be explained 
+latter):
+
+```{r gfiSummary_linreg}
+gfiSummary(fidSims)
+```
+
+The fiducial confidence intervals are close to the frequentist ones:
+
+```{r lm_linreg}
+confint(lm(y ~ x))
+```
+

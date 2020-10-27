@@ -1,6 +1,6 @@
 library(gfilmm)
 
-nsims <- 2L
+nsims <- 1000L
 confint_grandMean    <- matrix(NA_real_, nrow = nsims, ncol = 2L)
 confint_sigmaWithin  <- matrix(NA_real_, nrow = nsims, ncol = 2L)
 confint_sigmaBetween <- matrix(NA_real_, nrow = nsims, ncol = 2L)
@@ -25,7 +25,7 @@ for(i in 1L:nsims){
     group <- gl(2L, n)
   )
   gfi <- gfilmm(~ cbind(ylwr, yupr), fixed = ~ 1, random = ~ group, 
-                data = dat, N = 200)
+                data = dat, N = 5000)
   confint_grandMean[i,]    <- gfiConfInt(~ `(Intercept)`, gfi)
   confint_sigmaBetween[i,] <- gfiConfInt(~ sigma_group, gfi)
   confint_sigmaWithin[i,]  <- gfiConfInt(~ sigma_error, gfi)
@@ -45,3 +45,31 @@ results <- list(
 )
 
 saveRDS(results, "~/Work/R/gfilmm/inst/essais/simulations01.rds")
+
+################################################################################
+results <- readRDS("~/Work/R/gfilmm/inst/essais/simulations01.rds")
+
+cvrg_twoSided <- c(
+  sum(results$grandMean[,1] <= mu & mu <= results$grandMean[,2]),
+  sum(results$sigmaWithin[,1] <= sigmaWithin & sigmaWithin <= results$sigmaWithin[,2]),
+  sum(results$sigmaBetween[,1] <= sigmaBetween & sigmaBetween <= results$sigmaBetween[,2]),
+  sum(results$sigmaTotal[,1] <= sigmaTotal & sigmaTotal <= results$sigmaTotal[,2]),
+  sum(results$CV[,1] <= CV & CV <= results$CV[,2]) 
+) / nsims
+
+cvrg_leftSided <- c(
+  sum(mu <= results$grandMean[,2]),
+  sum(sigmaWithin <= results$sigmaWithin[,2]),
+  sum(sigmaBetween <= results$sigmaBetween[,2]),
+  sum(sigmaTotal <= results$sigmaTotal[,2]),
+  sum(CV <= results$CV[,2]) 
+) / nsims
+
+cvrg_rightSided <- c(
+  sum(results$grandMean[,1] <= mu),
+  sum(results$sigmaWithin[,1] <= sigmaWithin),
+  sum(results$sigmaBetween[,1] <= sigmaBetween),
+  sum(results$sigmaTotal[,1] <= sigmaTotal),
+  sum(results$CV[,1] <= CV) 
+) / nsims
+

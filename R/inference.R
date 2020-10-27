@@ -61,6 +61,7 @@ gfiSummary <- function(gfi, conf = 0.95){
 #' @return The fiducial confidence interval of the parameter.
 #' 
 #' @importFrom lazyeval f_eval_rhs
+#' @importFrom spatstat ewcdf quantile.ewcdf
 #' @export
 #'
 #' @examples h <- 0.01
@@ -85,6 +86,7 @@ gfiConfInt <- function(parameter, gfi, conf = 0.95){#, side = "two-sided"){
 #' @return The fiducial cumulative distribution function of the parameter.
 #' 
 #' @importFrom lazyeval f_eval_rhs
+#' @importFrom spatstat ewcdf 
 #' @export
 #'
 #' @examples h <- 0.01
@@ -95,5 +97,5 @@ gfiConfInt <- function(parameter, gfi, conf = 0.95){#, side = "two-sided"){
 #' F(0.2)
 gfiCDF <- function(parameter, gfi){
   fsims <- f_eval_rhs(parameter, data = gfi$VERTEX)
-  ewcdf(fsims, weights = gfi$WEIGHT) # du coup tu peux virer ewcdf de export
+  ewcdf(fsims, weights = gfi$WEIGHT) 
 }

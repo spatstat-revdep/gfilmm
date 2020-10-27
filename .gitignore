@@ -7,3 +7,5 @@ src/*.so
 src/*.dll
 inst/test_gfilmm.R
 inst/doc
+doc
+Meta

@@ -32,10 +32,10 @@ Samples the fiducial distributions.
 h <- 0.01
 gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N=5000)
 # fiducial cumulative distribution function of the intercept:
-f <- ewcdf(gfi$VERTEX[["(Intercept)"]], gfi$WEIGHT)
-plot(f, xlim = c(40, 65))
+Fintercept <- gfiCDF(~ `(Intercept)`, gfi)
+plot(Fintercept, xlim = c(40, 65))
 # fiducial confidence interval of the intercept:
-quantile(f, c(0.025, 0.975))
+gfiConfInt(~ `(Intercept)`, gfi)
 # fiducial density function of the intercept:
 library(kde1d)
 kfit <- kde1d(gfi$VERTEX[["(Intercept)"]], weights = gfi$WEIGHT)

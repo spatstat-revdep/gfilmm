@@ -4,5 +4,6 @@
 ^inst/test_gfilmm\.R$
 ^inst/essais$
 ^inst/cpp$
+^inst/docs$
 ^doc$
 ^Meta$

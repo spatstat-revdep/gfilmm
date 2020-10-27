@@ -51,9 +51,9 @@ gfiSummary <- function(gfi, conf = 0.95){
 
 
 #' Fiducial confidence interval
-#' @description Fiducial confidence interval.
+#' @description Fiducial confidence interval of a parameter of interest.
 #'
-#' @param parameter a right-sided formula defining the paramter of interest, 
+#' @param parameter a right-sided formula defining the parameter of interest, 
 #'   like \code{~ sigma_error/`(Intercept)`}
 #' @param gfi the output of \code{\link{gfilmm}}
 #' @param conf confidence level
@@ -72,4 +72,28 @@ gfiConfInt <- function(parameter, gfi, conf = 0.95){#, side = "two-sided"){
   fcdf <- ewcdf(fsims, weights = gfi$WEIGHT)
   alpha <- 1 - conf
   quantile.ewcdf(fcdf, c(alpha/2, 1-alpha/2))
+}
+
+#' Fiducial cumulative distribution function
+#' @description Fiducial cumulative distribution function of a parameter of 
+#'   interest.
+#'
+#' @param parameter a right-sided formula defining the parameter of interest, 
+#'   like \code{~ sigma_error/`(Intercept)`}
+#' @param gfi the output of \code{\link{gfilmm}}
+#'
+#' @return The fiducial cumulative distribution function of the parameter.
+#' 
+#' @importFrom lazyeval f_eval_rhs
+#' @export
+#'
+#' @examples h <- 0.01
+#' gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N=5000)
+#' F <- gfiCDF(~ sqrt(sigma_block^2 + sigma_error^2)/`(Intercept)`, gfi)
+#' plot(F, xlim = c(0, 0.3), main = "Coefficient of variation", 
+#'      ylab = expression("Pr("<="x)"))
+#' F(0.2)
+gfiCDF <- function(parameter, gfi){
+  fsims <- f_eval_rhs(parameter, data = gfi$VERTEX)
+  ewcdf(fsims, weights = gfi$WEIGHT) # du coup tu peux virer ewcdf de export
 }

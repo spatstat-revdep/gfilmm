@@ -7,7 +7,7 @@
 gfiConfInt(parameter, gfi, conf = 0.95)
 }
 \arguments{
-\item{parameter}{a right-sided formula defining the paramter of interest, 
+\item{parameter}{a right-sided formula defining the parameter of interest, 
 like \code{~ sigma_error/`(Intercept)`}}
 
 \item{gfi}{the output of \code{\link{gfilmm}}}
@@ -18,7 +18,7 @@ like \code{~ sigma_error/`(Intercept)`}}
 The fiducial confidence interval of the parameter.
 }
 \description{
-Fiducial confidence interval.
+Fiducial confidence interval of a parameter of interest.
 }
 \examples{
 h <- 0.01

@@ -73,3 +73,77 @@ The fiducial confidence intervals are close to the frequentist ones:
 confint(lm(y ~ x))
 ```
 
+The fiducial cumulative distribution function of the slope:
+
+```{r gfiCDF_linreg}
+Fslope <- gfiCDF(~ x, fidSims)
+plot(Fslope, main = "Slope", ylab = expression("Pr("<="x)"))
+```
+
+To get a fiducial density, I recommend the 'kde1d' package:
+
+```{r gfiDensity_linreg}
+library(kde1d)
+kfit <- kde1d(fidSims$VERTEX[["x"]], weights = fidSims$WEIGHT, mult = 4)
+curve(dkde1d(x, kfit), from = 0.7, to = 1.1)
+```
+
+# A mixed model
+
+Now let us simulate some data from a one-way ANOVA model with a random factor:
+
+```{r simulations_AOV1R}
+mu           <- 10000 # grand mean
+sigmaBetween <- 2
+sigmaWithin  <- 3
+sigmaTotal   <- sqrt(sigmaBetween^2 + sigmaWithin^2)
+CV           <- sigmaTotal / mu # coefficient of total variation
+n            <- 8L # sample size per group
+
+set.seed(666)
+groupmeans <- rnorm(2L, mu, sigmaBetween)
+y1         <- rnorm(n, groupmeans[1L], sigmaWithin) 
+y2         <- rnorm(n, groupmeans[2L], sigmaWithin) 
+y          <- c(y1, y2)
+y_rounded  <- round(c(y1, y2), digits = 1L)
+dat        <- data.frame(
+                ylwr = y_rounded - 0.05,
+                yupr = y_rounded + 0.05,
+                group = gl(2L, n)
+              )
+```
+
+We run the fiducial sampler:
+
+```{r gfilmm_AOV1R}
+fidSims <- gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = 500L)
+```
+
+Observe that the between standard deviation `sigma_group` has a positive value 
+in the `Pr(=0)` column:
+
+```{r gfiSummary_AOV1R}
+gfiSummary(fidSims)
+```
+
+What does it mean? The fiducial distributions of the variance components have a 
+mass at zero, and this value is the probability that the between standard 
+deviation equals zero.
+
+Compare the fiducial confidence interval of the grand mean to its Kenward-Roger 
+confidence interval:
+
+```{r KenwardRoger, message=FALSE}
+library(lmerTest)
+library(emmeans)
+fit <- lmer(y ~ (1|group), data = dat)
+emmeans(fit, ~ 1)
+```
+
+With `gfiConfInt` we can get a fiducial confidence interval for *any* parameter 
+of interest, for example the coefficient of total variation:
+
+```{r gfiConfInt_CV_AOV1R}
+gfiConfInt(~ sqrt(sigma_group^2 + sigma_error^2)/`(Intercept)`, fidSims)
+```
+

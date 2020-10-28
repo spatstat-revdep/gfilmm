@@ -1,9 +1,9 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^README\.md$
-^inst/test_gfilmm\.R$
 ^inst/essais$
 ^inst/simulations$
+^inst/stan$
 ^inst/cpp$
 ^inst/docs$
 ^doc$

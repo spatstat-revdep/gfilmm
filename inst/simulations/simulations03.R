@@ -130,6 +130,14 @@ dat <- data.frame(
   z2 = results$fsigmaBetween[,2]
 )
 
+dat <- data.frame(
+  x = 1:nsims,
+  y1 = results$sigmaTotal[,1],
+  y2 = results$sigmaTotal[,2],
+  z1 = results$fsigmaTotal[,1],
+  z2 = results$fsigmaTotal[,2]
+)
+
 amDumbbellChart(
   width = NULL,
   data = dat[1:20,],
@@ -138,7 +146,7 @@ amDumbbellChart(
   values = rbind(c("y1","y2"), c("z1","z2")),
   seriesNames = c("Fiducial", "Frequentist"),
   chartTitle = "Confidence intervals about the between standard deviation",
-  yLimits = c(-10, 200),
+#  yLimits = c(-10, 200),
   segmentsStyle = list(
     "Fiducial" = amSegment(width = 2),
     "Frequentist" = amSegment(width = 2)

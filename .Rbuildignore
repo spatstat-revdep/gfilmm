@@ -3,6 +3,7 @@
 ^README\.md$
 ^inst/test_gfilmm\.R$
 ^inst/essais$
+^inst/simulations$
 ^inst/cpp$
 ^inst/docs$
 ^doc$

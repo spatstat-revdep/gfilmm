@@ -14,3 +14,9 @@ div.sourceCode {
   background-color: seashell;
   margin-left: 1em;
 }
+
+@media print {
+  div.sourceCode {
+    background-color: seashell;
+  }
+}

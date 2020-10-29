@@ -25,6 +25,8 @@ for no random effect}
 \item{thresh}{threshold, default \code{N/2}; for experts only}
 
 \item{x}{a \code{gfilmm} object}
+
+\item{...}{ignored}
 }
 \value{
 A list with two components: a dataframe \code{VERTEX}, and a vector 

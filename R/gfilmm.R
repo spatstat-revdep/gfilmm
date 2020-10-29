@@ -10,6 +10,7 @@
 #' @param N desired number of simulations
 #' @param thresh threshold, default \code{N/2}; for experts only
 #' @param x a \code{gfilmm} object
+#' @param ... ignored
 #'
 #' @return A list with two components: a dataframe \code{VERTEX}, and a vector 
 #'   \code{WEIGHT}. It has class \code{gfilmm}.
@@ -72,13 +73,13 @@ gfilmm <- function(y, fixed, random, data, N, thresh=N/2){
     c(colnames(FE), paste0("sigma_", c(tlabs, "error")))
   gfi[["VERTEX"]] <- as.data.frame(t(gfi[["VERTEX"]]))
   attr(gfi, "effects") <- c(fixed = ncol(FE), random = ncol(RE2))
-  
   class(gfi) <- "gfilmm"
   gfi
 }
 
 #' @rdname gfilmm
 #' @importFrom stats setNames
+#' @importFrom utils capture.output str
 #' @export
 print.gfilmm <- function(x, ...){
   nms <- names(x)

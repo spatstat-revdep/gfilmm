@@ -83,6 +83,11 @@ gfilmm <- function(y, fixed, random, data, N, thresh=N/2){
 print.gfilmm <- function(x, ...){
   nms <- names(x)
   attributes(x) <- NULL
+  cat(
+    "`gfilmm` object", "\n",
+    "---------------", "\n",
+    sep = ""
+  )
   cat(capture.output(str(setNames(x, nms))), sep = "\n")
 }
 

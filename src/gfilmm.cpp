@@ -1077,8 +1077,11 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
     
   }
 
-  return Rcpp::List::create(Rcpp::Named("VERTEX") = VERTEX,
-                            Rcpp::Named("WEIGHT") = WTnorm, 
-                            Rcpp::Named("ESS") = ESS);
+  Rcpp::List out = Rcpp::List::create(
+    Rcpp::Named("VERTEX") = VERTEX,
+    Rcpp::Named("WEIGHT") = WTnorm
+  );
+  out.attr("ESS") = ESS;
+  return out;
 }
 

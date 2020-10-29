@@ -9,9 +9,10 @@
 #' @param data the data, a dataframe
 #' @param N desired number of simulations
 #' @param thresh threshold, default \code{N/2}; for experts only
+#' @param x a \code{gfilmm} object
 #'
-#' @return A list with three components: \code{VERTEX}, \code{WEIGHT} and 
-#'   \code{ESS}.
+#' @return A list with two components: a dataframe \code{VERTEX}, and a vector 
+#'   \code{WEIGHT}. It has class \code{gfilmm}.
 #' 
 #' @importFrom stats model.matrix
 #' @importFrom utils head
@@ -74,6 +75,15 @@ gfilmm <- function(y, fixed, random, data, N, thresh=N/2){
   
   class(gfi) <- "gfilmm"
   gfi
+}
+
+#' @rdname gfilmm
+#' @importFrom stats setNames
+#' @export
+print.gfilmm <- function(x, ...){
+  nms <- names(x)
+  attributes(x) <- NULL
+  cat(capture.output(str(setNames(x, nms))), sep = "\n")
 }
 
 ######################

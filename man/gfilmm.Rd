@@ -2,9 +2,12 @@
 % Please edit documentation in R/gfilmm.R
 \name{gfilmm}
 \alias{gfilmm}
+\alias{print.gfilmm}
 \title{Generalized fiducial inference}
 \usage{
 gfilmm(y, fixed, random, data, N, thresh = N/2)
+
+\method{print}{gfilmm}(x, ...)
 }
 \arguments{
 \item{y}{a right-sided formula of the form \code{~ cbind(lower,upper)} for 
@@ -20,10 +23,12 @@ for no random effect}
 \item{N}{desired number of simulations}
 
 \item{thresh}{threshold, default \code{N/2}; for experts only}
+
+\item{x}{a \code{gfilmm} object}
 }
 \value{
-A list with three components: \code{VERTEX}, \code{WEIGHT} and 
-  \code{ESS}.
+A list with two components: a dataframe \code{VERTEX}, and a vector 
+  \code{WEIGHT}. It has class \code{gfilmm}.
 }
 \description{
 Samples the fiducial distributions.

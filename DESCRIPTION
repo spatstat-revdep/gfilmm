@@ -1,8 +1,7 @@
 Package: gfilmm
 Type: Package
 Title: Generalized Fiducial Inference for Normal Linear Mixed Models
-Version: 0.0.0.9003
-Date: 2020-10-28
+Version: 0.1.0
 Authors@R: c(
     person("Stéphane", "Laurent", role = c("aut", "cre"),
            email = "laurent_step@outlook.fr"),

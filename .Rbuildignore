@@ -8,3 +8,4 @@
 ^inst/docs$
 ^doc$
 ^Meta$
+^cran-comments\.md$

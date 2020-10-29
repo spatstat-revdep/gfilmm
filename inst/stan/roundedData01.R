@@ -6,8 +6,8 @@ hist(y, breaks = 7:12+0.5)
 set.seed(3141592L)
 mu <- 10
 # between 2 within 0.5
-opmeans <- rnorm(4L, mean = mu, sd = 1)
-y <- c(vapply(opmeans, function(m) rnorm(3L, mean = m, sd = 1), numeric(3L)))
+opmeans <- rnorm(4L, mean = mu, sd = 0.3)
+y <- c(vapply(opmeans, function(m) rnorm(3L, mean = m, sd = 0.3), numeric(3L)))
 y_rounded <- round(y, digits = 0L)
 dat <- data.frame(
   ylwr = y_rounded - 0.5,
@@ -29,7 +29,7 @@ ggplot(data=dd, aes(x=class, y=Pr)) +
   ylab("Pr(class)") + xlab("class of y")
 
 library(gfilmm)
-gfi <- gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ operator, dat, N = 10000L)
+gfi <- gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ operator, dat, N = 10L)
 gfiSummary(gfi)
 gfiConfInt(~ sqrt(sigma_operator^2 + sigma_error^2), gfi)
 

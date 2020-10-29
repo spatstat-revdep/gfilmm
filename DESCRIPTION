@@ -15,7 +15,7 @@ Description: Simulation of the generalized fiducial distribution for normal line
 License: GPL-3
 SystemRequirements:	C++11
 Depends: R (>= 3.1.0)
-Imports: Rcpp (>= 1.0.0), lazyeval, stats, spatstat
+Imports: Rcpp (>= 1.0.0), lazyeval, stats, spatstat, utils
 Suggests: 
     kde1d,
     knitr,

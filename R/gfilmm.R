@@ -13,8 +13,8 @@
 #' @return A list with three components: \code{VERTEX}, \code{WEIGHT} and 
 #'   \code{ESS}.
 #' 
-#' @importFrom lazyeval f_eval_rhs as.lazy lazy_eval
-#' @importFrom stats terms.formula model.matrix
+#' @importFrom stats model.matrix
+#' @importFrom utils head
 #' @export
 #' 
 #' @references J. Cisewski and J.Hannig. 
@@ -61,60 +61,18 @@ gfilmm <- function(y, fixed, random, data, N, thresh=N/2){
       "The design matrix of the fixed effects is not of full rank."
     )
   }
-  if(!is.null(random)){
-    tf <- terms.formula(random)
-    factors <- rownames(attr(tf, "factors"))
-    tvars <- attr(tf, "variables")
-    tlabs <- attr(tf, "term.labels")
-    tvars <- eval(tvars, envir = data)
-    numerical <- vapply(tvars, is.numeric, logical(1L))
-    if(any(numerical)){
-      warning(
-        "Numeric random effects are not supported; converting to factors."
-      )
-    }
-    rdat <- lapply(tvars, function(tvar) droplevels(as.factor(tvar)))
-    degenerate <- vapply(rdat, function(x) nlevels(x) == 1L, logical(1L))
-    if(any(degenerate)){
-      stop(
-        "Random effects with only one level are not allowed."
-      )
-    }
-    loneLevel <- vapply(rdat, function(x) any(table(x) == 1L), logical(1L))
-    if(any(loneLevel)){
-      stop(
-        "Found a random effect with a lone level."
-      )
-    }
-    names(rdat) <- factors
-    # laz <- as.lazy(tlabs[1L], env = rdat) 
-    # eval(laz$expr, envir = laz$env)
-    # lazy_eval(as.lazy(tlabs[3L]), data = rdat)
-    RE <- lapply(tlabs, function(tlab){
-      droplevels(lazy_eval(as.lazy(tlab), data = rdat))
-    })
-  }else{
-    tlabs <- NULL
-    RE <- NULL
-  }
-  RE2 <- c(RE, list(error = factor(1L:n))) #Adds the error effect 
-  E <- c(vapply(RE, nlevels, integer(1L)), n)
-  RE <- NULL 
-  for(i in seq_along(E)){ # Builds an indicator RE matrix for the effects
-    re_levels <- levels(RE2[[i]])
-    for(j in 1L:E[i]){
-      temp1 <- which(RE2[[i]] == re_levels[j]) 
-      temp2 <- integer(n) 
-      temp2[temp1] <- 1L 
-      RE <- cbind(RE, temp2)
-    }
-  } 
+  RE2 <- getRE2(data, random, check = TRUE)
+  tlabs <- head(names(RE2), -1L)
+  Z <- getZ(RE2) 
+  E <- vapply(RE2, nlevels, integer(1L))
   RE2 <- vapply(RE2, as.integer, integer(n)) - 1L
-  gfi <- gfilmm_(yl, yu, FE, RE, RE2, E, N, thresh)
-  rownames(gfi$VERTEX) <-
+  gfi <- gfilmm_(yl, yu, FE, Z, RE2, E, N, thresh)
+  rownames(gfi[["VERTEX"]]) <-
     c(colnames(FE), paste0("sigma_", c(tlabs, "error")))
-  gfi$VERTEX <- as.data.frame(t(gfi$VERTEX))
+  gfi[["VERTEX"]] <- as.data.frame(t(gfi[["VERTEX"]]))
   attr(gfi, "effects") <- c(fixed = ncol(FE), random = ncol(RE2))
+  
+  class(gfi) <- "gfilmm"
   gfi
 }
 

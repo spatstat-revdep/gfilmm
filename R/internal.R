@@ -1,7 +1,10 @@
 #' @importFrom lazyeval f_eval_rhs as.lazy lazy_eval
-#' @importFrom stats terms.formula model.matrix setNames
+#' @importFrom stats terms.formula setNames
 #' @noRd
 getRE2 <- function(data, random, check){
+  if(is.null(random)){
+    return(data.frame(error = factor(seq_len(nrow(data)))))
+  }
   data <- droplevels(data)
   tf <- terms.formula(random)
   factors <- rownames(attr(tf, "factors"))

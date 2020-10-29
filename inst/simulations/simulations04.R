@@ -1,6 +1,16 @@
 library(gfilmm)
 library(AOV1R)
 
+pconfint <- function(fit){
+  piv <- pivotal(fit, 50000L)
+  piv$G_sigma2tot <- with(piv, G_sigma2b + G_sigma2w)
+  cis <- lapply(piv, quantile, probs = c(2.5, 97.5)/100)
+  cis$G_sigma2b <- sign(cis$G_sigma2b) * sqrt(abs(cis$G_sigma2b))
+  cis$G_sigma2w <- sqrt(cis$G_sigma2w)
+  cis$G_sigma2tot <- sqrt(cis$G_sigma2tot)
+  cis
+}
+
 nsims <- 20L
 confint_grandMean    <- matrix(NA_real_, nrow = nsims, ncol = 2L)
 confint_sigmaWithin  <- matrix(NA_real_, nrow = nsims, ncol = 2L)
@@ -11,14 +21,18 @@ fconfint_grandMean    <- matrix(NA_real_, nrow = nsims, ncol = 2L)
 fconfint_sigmaWithin  <- matrix(NA_real_, nrow = nsims, ncol = 2L)
 fconfint_sigmaBetween <- matrix(NA_real_, nrow = nsims, ncol = 2L)
 fconfint_sigmaTotal   <- matrix(NA_real_, nrow = nsims, ncol = 2L)
+pconfint_grandMean    <- matrix(NA_real_, nrow = nsims, ncol = 2L)
+pconfint_sigmaWithin  <- matrix(NA_real_, nrow = nsims, ncol = 2L)
+pconfint_sigmaBetween <- matrix(NA_real_, nrow = nsims, ncol = 2L)
+pconfint_sigmaTotal   <- matrix(NA_real_, nrow = nsims, ncol = 2L)
 
 mu           <- 10000 # grand mean
 sigmaBetween <- 2
 sigmaWithin  <- 3
 sigmaTotal   <- sqrt(sigmaBetween^2 + sigmaWithin^2)
 CV           <- sigmaTotal / mu
-I            <- 6L # number of groups
-J            <- 8L # sample size per group
+I            <- 3L # number of groups
+J            <- 2L # sample size per group
 
 set.seed(666L)
 for(i in 1L:nsims){
@@ -42,10 +56,15 @@ for(i in 1L:nsims){
     gfiConfInt(~ sqrt(sigma_group^2 + sigma_error^2)/`(Intercept)`, gfi)
   aovfit <- aov1r(y ~ group)
   cis <- confint(aovfit)
-  fconfint_grandMean[i,]    <- unlist(cis["grandmean", c("lwr", "upr")])
+  fconfint_grandMean[i,]    <- unlist(cis["grandMean", c("lwr", "upr")])
   fconfint_sigmaBetween[i,] <- unlist(cis["between", c("lwr", "upr")])
   fconfint_sigmaWithin[i,]  <- unlist(cis["within", c("lwr", "upr")])
   fconfint_sigmaTotal[i,]   <- unlist(cis["total", c("lwr", "upr")])
+  cis <- pconfint(aovfit)
+  pconfint_grandMean[i,]    <- cis$G_mu
+  pconfint_sigmaBetween[i,] <- cis$G_sigma2b
+  pconfint_sigmaWithin[i,]  <- cis$G_sigma2w
+  pconfint_sigmaTotal[i,]   <- cis$G_sigma2tot
 }
 
 

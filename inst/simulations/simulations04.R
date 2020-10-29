@@ -38,15 +38,15 @@ set.seed(666L)
 for(i in 1L:nsims){
   means <- rnorm(I, mu, sigmaBetween)
   y <- c(vapply(means, function(m) rnorm(J, m, sigmaWithin), numeric(J)))
-  y_rounded <- round(y, digits = 1L)
+  y_rounded <- y#round(y, digits = 1L)
   group <- gl(I, J)
   dat   <- data.frame(
-    ylwr = y_rounded - 0.05,
-    yupr = y_rounded + 0.05,
+    ylwr = y_rounded - 0.015,
+    yupr = y_rounded + 0.015,
     group = group
   )
   gfi <- gfilmm(~ cbind(ylwr, yupr), fixed = ~ 1, random = ~ group, 
-                data = dat, N = 5000L)
+                data = dat, N = 30000L)
   confint_grandMean[i,]    <- gfiConfInt(~ `(Intercept)`, gfi)
   confint_sigmaBetween[i,] <- gfiConfInt(~ sigma_group, gfi)
   confint_sigmaWithin[i,]  <- gfiConfInt(~ sigma_error, gfi)
@@ -77,7 +77,11 @@ results <- list(
   fgrandMean = fconfint_grandMean,
   fsigmaWithin = fconfint_sigmaWithin,
   fsigmaBetween = fconfint_sigmaBetween,
-  fsigmaTotal = fconfint_sigmaTotal
+  fsigmaTotal = fconfint_sigmaTotal,
+  pgrandMean = pconfint_grandMean,
+  psigmaWithin = pconfint_sigmaWithin,
+  psigmaBetween = pconfint_sigmaBetween,
+  psigmaTotal = pconfint_sigmaTotal
 )
 
 saveRDS(results, "~/Work/R/gfilmm/inst/simulations/simulations04.rds")
@@ -130,31 +134,69 @@ fcvrg_rightSided <- c(
   sum(results$fsigmaTotal[,1] <= sigmaTotal)
 ) / nsims
 
+
+pcvrg_twoSided <- c(
+  sum(results$pgrandMean[,1] <= mu & mu <= results$pgrandMean[,2]),
+  sum(results$psigmaWithin[,1] <= sigmaWithin & sigmaWithin <= results$psigmaWithin[,2]),
+  sum(results$psigmaBetween[,1] <= sigmaBetween & sigmaBetween <= results$psigmaBetween[,2]),
+  sum(results$psigmaTotal[,1] <= sigmaTotal & sigmaTotal <= results$psigmaTotal[,2])
+) / nsims
+
+pcvrg_leftSided <- c(
+  sum(mu <= results$pgrandMean[,2]),
+  sum(sigmaWithin <= results$psigmaWithin[,2]),
+  sum(sigmaBetween <= results$psigmaBetween[,2]),
+  sum(sigmaTotal <= results$psigmaTotal[,2])
+) / nsims
+
+pcvrg_rightSided <- c(
+  sum(results$pgrandMean[,1] <= mu),
+  sum(results$psigmaWithin[,1] <= sigmaWithin),
+  sum(results$psigmaBetween[,1] <= sigmaBetween),
+  sum(results$psigmaTotal[,1] <= sigmaTotal)
+) / nsims
+
 ############################################################################
 library(rAmCharts4)
 
 dat <- data.frame(
   x = 1:nsims,
-  y1 = results$grandMean[,1],
-  y2 = results$grandMean[,2],
-  z1 = results$fgrandMean[,1],
-  z2 = results$fgrandMean[,2]
+  x1 = results$grandMean[,1],
+  x2 = results$grandMean[,2],
+  y1 = results$fgrandMean[,1],
+  y2 = results$fgrandMean[,2],
+  z1 = results$pgrandMean[,1],
+  z2 = results$pgrandMean[,2]
 )
 
 dat <- data.frame(
   x = 1:nsims,
-  y1 = results$sigmaBetween[,1],
-  y2 = results$sigmaBetween[,2],
-  z1 = results$fsigmaBetween[,1],
-  z2 = results$fsigmaBetween[,2]
+  x1 = results$sigmaWithin[,1],
+  x2 = results$sigmaWithin[,2],
+  y1 = results$fsigmaWithin[,1],
+  y2 = results$fsigmaWithin[,2],
+  z1 = results$psigmaWithin[,1],
+  z2 = results$psigmaWithin[,2]
 )
 
 dat <- data.frame(
   x = 1:nsims,
-  y1 = results$sigmaTotal[,1],
-  y2 = results$sigmaTotal[,2],
-  z1 = results$fsigmaTotal[,1],
-  z2 = results$fsigmaTotal[,2]
+  x1 = results$sigmaBetween[,1],
+  x2 = results$sigmaBetween[,2],
+  y1 = results$fsigmaBetween[,1],
+  y2 = results$fsigmaBetween[,2],
+  z1 = results$psigmaBetween[,1],
+  z2 = results$psigmaBetween[,2]
+)
+
+dat <- data.frame(
+  x = 1:nsims,
+  x1 = results$sigmaTotal[,1],
+  x2 = results$sigmaTotal[,2],
+  y1 = results$fsigmaTotal[,1],
+  y2 = results$fsigmaTotal[,2],
+  z1 = results$psigmaTotal[,1],
+  z2 = results$psigmaTotal[,2]
 )
 
 amDumbbellChart(
@@ -162,19 +204,22 @@ amDumbbellChart(
   data = dat[1:20,],
   draggable = FALSE,
   category = "x",
-  values = rbind(c("y1","y2"), c("z1","z2")),
-  seriesNames = c("Fiducial", "Frequentist"),
-  chartTitle = "Confidence intervals about the between standard deviation",
+  values = rbind(c("x1","x2"), c("y1","y2"), c("z1","z2")),
+  seriesNames = c("Fiducial", "Frequentist", "Pivotal"),
+  chartTitle = "Confidence intervals about the total standard deviation",
 #  yLimits = c(-10, 200),
   segmentsStyle = list(
-    "Fiducial" = amSegment(width = 2),
-    "Frequentist" = amSegment(width = 2)
+    "Fiducial" = amSegment(width = 2, color = "red"),
+    "Frequentist" = amSegment(width = 2, color = "green"),
+    "Pivotal" = amSegment(width = 2, color = "blue")
   ),
   bullets = list(
-    y1 = amTriangle(strokeWidth = 0),
-    y2 = amTriangle(rotation = 180, strokeWidth = 0),
-    z1 = amTriangle(strokeWidth = 0),
-    z2 = amTriangle(rotation = 180, strokeWidth = 0)
+    x1 = amTriangle(strokeWidth = 0, color = "red"),
+    x2 = amTriangle(rotation = 180, strokeWidth = 0, color = "red"),
+    y1 = amTriangle(strokeWidth = 0, color = "green"),
+    y2 = amTriangle(rotation = 180, strokeWidth = 0, color = "green"),
+    z1 = amTriangle(strokeWidth = 0, color = "blue"),
+    z2 = amTriangle(rotation = 180, strokeWidth = 0, color = "blue")
   ),
   tooltip = amTooltip("upper: {openValueY}\nlower: {valueY}", scale = 0.75),
   xAxis = list(

@@ -395,7 +395,7 @@ Eigen::MatrixXd pickCoordinates(size_t Dim, size_t N, size_t fe,
 Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U, 
                    Eigen::MatrixXd FE, Eigen::MatrixXd RE, 
                    Eigen::MatrixXi RE2, Rcpp::IntegerVector E,
-                   size_t N, size_t thresh){
+                   size_t N, double thresh){
   Eigen::VectorXd WTnorm(N); // output:weights
   const size_t n = L.size();
   const size_t fe = FE.cols(); // si FE=NULL, passer une matrice n x 0

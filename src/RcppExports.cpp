@@ -7,7 +7,7 @@
 using namespace Rcpp;
 
 // gfilmm_
-Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U, Eigen::MatrixXd FE, Eigen::MatrixXd RE, Eigen::MatrixXi RE2, Rcpp::IntegerVector E, size_t N, size_t thresh);
+Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U, Eigen::MatrixXd FE, Eigen::MatrixXd RE, Eigen::MatrixXi RE2, Rcpp::IntegerVector E, size_t N, double thresh);
 RcppExport SEXP _gfilmm_gfilmm_(SEXP LSEXP, SEXP USEXP, SEXP FESEXP, SEXP RESEXP, SEXP RE2SEXP, SEXP ESEXP, SEXP NSEXP, SEXP threshSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -19,7 +19,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Eigen::MatrixXi >::type RE2(RE2SEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type E(ESEXP);
     Rcpp::traits::input_parameter< size_t >::type N(NSEXP);
-    Rcpp::traits::input_parameter< size_t >::type thresh(threshSEXP);
+    Rcpp::traits::input_parameter< double >::type thresh(threshSEXP);
     rcpp_result_gen = Rcpp::wrap(gfilmm_(L, U, FE, RE, RE2, E, N, thresh));
     return rcpp_result_gen;
 END_RCPP

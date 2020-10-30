@@ -1,3 +1,8 @@
+## Release summary
+
+This is a resubmission. Some tests with the previous submission failed. I have 
+fixed these tests.
+
 ## Test environments
 
 * ubuntu 18.04, R 3.6.3

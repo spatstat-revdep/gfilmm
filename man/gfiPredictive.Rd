@@ -12,7 +12,8 @@ gfiPredictive(gfi, newdata)
 \item{newdata}{dataframe in which to look for variables with which to predict}
 }
 \value{
-The simulations in a dataframe.
+A list with two fields: \code{FPD}, a dataframe containing the 
+  simulations, and \code{WEIGHT}, their weight.
 }
 \description{
 Simulations of the generalized fiducial predictive 

@@ -5,7 +5,8 @@
 #' @param gfi a \code{\link{gfilmm}} object
 #' @param newdata dataframe in which to look for variables with which to predict
 #'
-#' @return The simulations in a dataframe.
+#' @return A list with two fields: \code{FPD}, a dataframe containing the 
+#'   simulations, and \code{WEIGHT}, their weight.
 #' 
 #' @importFrom stats model.matrix rnorm
 #' @importFrom utils head tail
@@ -68,5 +69,7 @@ gfiPredictive <- function(gfi, newdata){
     # out[i,] <- A
     out[i,] <- t(Mu) + t(gauss[i,]) %*% cholSigma # or gauss[i,,drop=FALSE] instead of t() => TODO: benchmarks
   }
-  as.data.frame(out)
+  out <- list(FPD = as.data.frame(out), WEIGHT = gfi[["WEIGHT"]])
+  class(out) <- "gfilmm.pred"
+  out
 }

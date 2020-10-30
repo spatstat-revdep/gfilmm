@@ -73,7 +73,6 @@ gfilmm <- function(y, fixed, random, data, N, thresh=N/2){
     c(colnames(FE), paste0("sigma_", c(tlabs, "error")))
   gfi[["VERTEX"]] <- as.data.frame(t(gfi[["VERTEX"]]))
   attr(gfi, "effects") <- c(fixed = ncol(FE), random = ncol(RE2))
-  attr(gfi, "E") <- E
   attr(gfi, "covariates") <- getCovariates(data, fixed, random)
   attr(gfi, "fixed") <- fixed
   attr(gfi, "random") <- random

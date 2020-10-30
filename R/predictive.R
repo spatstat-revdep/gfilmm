@@ -7,8 +7,7 @@
 #'
 #' @return The simulations in a dataframe.
 #' 
-#' @importFrom mvnfast rmvn
-#' @importFrom stats model.matrix
+#' @importFrom stats model.matrix rnorm
 #' @importFrom utils head tail
 #' @export
 #'
@@ -24,25 +23,28 @@ gfiPredictive <- function(gfi, newdata){
   }
   # TODO: check levels
   fixed  <- attr(gfi, "fixed")
-  X <- model.matrix(fixed, data = newdata)
+  X <- model.matrix(fixed, data = newdata) # pb si nlevels=1 => ajouter les niveaux
   random <- attr(gfi, "random")
   Z <- getZ(getRE2(newdata, random, check = FALSE))
   N <- length(gfi[["WEIGHT"]])
   vertices <- t(as.matrix(gfi[["VERTEX"]]))
   neffects <- attr(gfi, "effects")
-  fparams  <- head(vertices, neffects[["fixed"]])
+  fe       <- neffects[["fixed"]]
+  fparams  <- head(vertices, fe)
   vars     <- tail(vertices, neffects[["random"]])
   E <- attr(gfi, "E")
   E[length(E)] <- nrow(newdata)
+  gauss <- matrix(rnorm(N*fe), nrow = N, ncol = fe)
   out <- matrix(NA_real_, nrow = N, ncol = nrow(newdata))
   for(i in 1L:N){
-    Sigma <- Z %*% diag(rep(vars[, i], times = E)) %*% t(Z)
+    cholSigma <- chol(Z %*% (rep(vars[, i], times = E) * t(Z)))
     Mu <- X %*% fparams[, i]
-    out[i,] <- rmvn(1L, Mu, Sigma)
+#    out[i,] <- rmvn(1L, Mu, Sigma)
     # A <- matrix(NA_real_, nrow = 1L, ncol = neffects[["fixed"]])
-    # .Call("rmvnCpp", n_ = 1L, mu_ = Mu, sigma_ = Sigma, ncores_ = 1L, 
+    # .Call("rmvnCpp", n_ = 1L, mu_ = Mu, sigma_ = Sigma, ncores_ = 1L,
     #       isChol_ = FALSE, A_ = A, PACKAGE = "mvnfast")
     # out[i,] <- A
+    out[i,] <- t(Mu) + t(gauss[i,]) %*% cholSigma # or gauss[i,,drop=FALSE] instead of t() => TODO: benchmarks
   }
   as.data.frame(out)
 }

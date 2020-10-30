@@ -7,7 +7,8 @@
 gfiSummary(gfi, conf = 0.95)
 }
 \arguments{
-\item{gfi}{output of \code{\link{gfilmm}}}
+\item{gfi}{a \code{gfilmm} object (output of \code{\link{gfilmm}} or 
+\code{\link{gfilmmPredictive}})}
 
 \item{conf}{confidence level}
 }

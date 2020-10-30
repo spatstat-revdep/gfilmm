@@ -10,7 +10,8 @@ gfiConfInt(parameter, gfi, conf = 0.95)
 \item{parameter}{a right-sided formula defining the parameter of interest, 
 like \code{~ sigma_error/`(Intercept)`}}
 
-\item{gfi}{the output of \code{\link{gfilmm}}}
+\item{gfi}{a \code{gfilmm} object (output of \code{\link{gfilmm}} or 
+\code{\link{gfilmmPredictive}})}
 
 \item{conf}{confidence level}
 }

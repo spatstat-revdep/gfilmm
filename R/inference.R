@@ -1,7 +1,8 @@
 inference <- function(gfi, v, alpha=0.05){ 
-  out <- numeric(5L)
-  names(out) <- c("mean", "median", "lwr", "upr", "Pr(=0)")
-  vertices <- gfi$VERTEX[[v]]
+  gfipred <- inherits(gfi, "gfilmm.pred")
+  out <- numeric(ifelse(gfipred, 4L, 5L))
+  names(out) <- c("mean", "median", "lwr", "upr", if(!gfipred) "Pr(=0)")
+  vertices <- if(gfipred) gfi$FPD[[v]] else gfi$VERTEX[[v]]
   weights <- gfi$WEIGHT
   out[1L] <- sum(vertices*weights) # mean
   h <- cbind(vertices,weights)
@@ -13,15 +14,17 @@ inference <- function(gfi, v, alpha=0.05){
   out[3L] <- hsort[ci_l,1L] # lower bound
   out[4L] <- hsort[ci_u,1L] # upper bound
   out[2L] <- hsort[ci_m,1L] # estimate (median)
-  fe <- attr(gfi, "effects")[["fixed"]]
-  if(v <= fe){
-    out[5L] <- NA_real_
-  }else{
-    zeros <- vertices == 0
-    if(any(zeros)){
-      out[5L] <- sum(weights[zeros])
+  if(!gfipred){
+    fe <- attr(gfi, "effects")[["fixed"]]
+    if(v <= fe){
+      out[5L] <- NA_real_
     }else{
-      out[5L] <- 0
+      zeros <- vertices == 0
+      if(any(zeros)){
+        out[5L] <- sum(weights[zeros])
+      }else{
+        out[5L] <- 0
+      }
     }
   }
   out
@@ -29,7 +32,8 @@ inference <- function(gfi, v, alpha=0.05){
 
 #' Summary of fiducial distributions
 #'
-#' @param gfi output of \code{\link{gfilmm}}
+#' @param gfi a \code{gfilmm} object (output of \code{\link{gfilmm}} or 
+#'   \code{\link{gfilmmPredictive}})
 #' @param conf confidence level
 #'
 #' @return A matrix with summary statistics: means, medians, confidence 
@@ -42,9 +46,11 @@ inference <- function(gfi, v, alpha=0.05){
 #' gfi <- gfilmm(~ cbind(y-h, y+h), ~ 1, ~ Batch, data = KM41, N = 5000)
 #' gfiSummary(gfi)
 gfiSummary <- function(gfi, conf = 0.95){
-  seq_ <- 1L:ncol(gfi$VERTEX)
-  names(seq_) <- names(gfi$VERTEX)
-  out <- t(vapply(seq_, function(v) inference(gfi, v, 1-conf), numeric(5L)))
+  sims <- if(inherits(gfi, "gfilmm.pred")) gfi[["FPD"]] else gfi[["VERTEX"]]
+  seq_ <- 1L:ncol(sims)
+  names(seq_) <- names(sims)
+  p <- ifelse(inherits(gfi, "gfilmm.pred"), 4L, 5L)
+  out <- t(vapply(seq_, function(v) inference(gfi, v, 1-conf), numeric(p)))
   attr(out, "confidence level") <- conf
   out
 }
@@ -55,7 +61,8 @@ gfiSummary <- function(gfi, conf = 0.95){
 #'
 #' @param parameter a right-sided formula defining the parameter of interest, 
 #'   like \code{~ sigma_error/`(Intercept)`}
-#' @param gfi the output of \code{\link{gfilmm}}
+#' @param gfi a \code{gfilmm} object (output of \code{\link{gfilmm}} or 
+#'   \code{\link{gfilmmPredictive}})
 #' @param conf confidence level
 #'
 #' @return The fiducial confidence interval of the parameter.
@@ -69,8 +76,9 @@ gfiSummary <- function(gfi, conf = 0.95){
 #' gfiConfInt(~ sqrt(sigma_block^2 + sigma_error^2)/`(Intercept)`, gfi)
 gfiConfInt <- function(parameter, gfi, conf = 0.95){#, side = "two-sided"){
   #side <- match.arg(side, c("two-sided", "left", "right"))
-  fsims <- f_eval_rhs(parameter, data = gfi$VERTEX)
-  fcdf <- ewcdf(fsims, weights = gfi$WEIGHT)
+  data <- if(inherits(gfi, "gfilmm.pred")) gfi[["FPD"]] else gfi[["VERTEX"]]
+  fsims <- f_eval_rhs(parameter, data = data)
+  fcdf <- ewcdf(fsims, weights = gfi[["WEIGHT"]])
   alpha <- 1 - conf
   quantile.ewcdf(fcdf, c(alpha/2, 1-alpha/2))
 }
@@ -81,7 +89,8 @@ gfiConfInt <- function(parameter, gfi, conf = 0.95){#, side = "two-sided"){
 #'
 #' @param parameter a right-sided formula defining the parameter of interest, 
 #'   like \code{~ sigma_error/`(Intercept)`}
-#' @param gfi the output of \code{\link{gfilmm}}
+#' @param gfi a \code{gfilmm} object (output of \code{\link{gfilmm}} or 
+#'   \code{\link{gfilmmPredictive}})
 #'
 #' @return The fiducial cumulative distribution function of the parameter.
 #' 
@@ -96,6 +105,7 @@ gfiConfInt <- function(parameter, gfi, conf = 0.95){#, side = "two-sided"){
 #'      ylab = expression("Pr("<="x)"))
 #' F(0.2)
 gfiCDF <- function(parameter, gfi){
-  fsims <- f_eval_rhs(parameter, data = gfi$VERTEX)
-  ewcdf(fsims, weights = gfi$WEIGHT) 
+  data <- if(inherits(gfi, "gfilmm.pred")) gfi[["FPD"]] else gfi[["VERTEX"]]
+  fsims <- f_eval_rhs(parameter, data = data)
+  ewcdf(fsims, weights = gfi[["WEIGHT"]]) 
 }

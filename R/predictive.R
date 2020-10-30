@@ -6,15 +6,17 @@
 #' @param newdata dataframe in which to look for variables with which to predict
 #'
 #' @return A list with two fields: \code{FPD}, a dataframe containing the 
-#'   simulations, and \code{WEIGHT}, their weight.
+#'   simulations, and \code{WEIGHT}, their weight. This is a \code{gfilmm} 
+#'   object.
 #' 
 #' @importFrom stats model.matrix rnorm
 #' @importFrom utils head tail
 #' @export
 #'
-#' @examples gfi <- gfilmm(~ cbind(yield-0.1, yield+0.1), ~ N, ~ P, npk, 20)
-#' gfiPredictive(gfi, data.frame(N = "0", P = "0"))
-gfiPredictive <- function(gfi, newdata){
+#' @examples gfi <- gfilmm(~ cbind(yield-0.1, yield+0.1), ~ N, ~ block, npk, 2000)
+#' fpd <- gfilmmPredictive(gfi, data.frame(N = c("0","0"), block = c("4","6")))
+#' gfiSummary(fpd)
+gfilmmPredictive <- function(gfi, newdata){
   if(anyDuplicated(newdata)){
     stop(
       "There are some duplicated rows in `newdata`."
@@ -70,6 +72,6 @@ gfiPredictive <- function(gfi, newdata){
     out[i,] <- t(Mu) + t(gauss[i,]) %*% cholSigma # or gauss[i,,drop=FALSE] instead of t() => TODO: benchmarks
   }
   out <- list(FPD = as.data.frame(out), WEIGHT = gfi[["WEIGHT"]])
-  class(out) <- "gfilmm.pred"
+  class(out) <- c("gfilmm", "gfilmm.pred")
   out
 }

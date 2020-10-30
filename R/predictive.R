@@ -62,7 +62,7 @@ gfilmmPredictive <- function(gfi, newdata){
   out <- matrix(NA_real_, nrow = N, ncol = nrow(newdata))
   colnames(out) <- paste0("y", seq_len(nrow(newdata)))
   for(i in 1L:N){
-    cholSigma <- chol(Z %*% (rep(vars[, i], times = E) * t(Z)))
+    cholSigma <- chol(Z %*% (rep(vars[, i]^2, times = E) * t(Z)))
     Mu <- X %*% fparams[, i]
 #    out[i,] <- rmvn(1L, Mu, Sigma)
     # A <- matrix(NA_real_, nrow = 1L, ncol = neffects[["fixed"]])

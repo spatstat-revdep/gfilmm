@@ -6,6 +6,12 @@ p {
   text-align: justify;
 }
 
+p code {
+  color: #e83e8c;
+  font-family: "Lucida Console", Monaco, monospace;
+  font-weight: bold;
+}
+
 code span.co {
   color: darkmagenta;
 }

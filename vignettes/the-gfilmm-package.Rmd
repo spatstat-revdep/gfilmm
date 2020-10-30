@@ -83,7 +83,8 @@ gfiSummary(fidSims)
 The fiducial confidence intervals are close to the frequentist ones:
 
 ```{r lm_linreg}
-confint(lm(y ~ x))
+lmfit <- lm(y ~ x)
+confint(lmfit)
 ```
 
 The fiducial cumulative distribution function of the slope:
@@ -100,6 +101,22 @@ library(kde1d)
 kfit <- kde1d(fidSims$VERTEX[["x"]], weights = fidSims$WEIGHT, mult = 4)
 curve(dkde1d(x, kfit), from = 0.7, to = 1.1)
 ```
+
+***Fiducial predictive inference***. The `gfilmmPredictive` function samples 
+the generalized fiducial predictive distribution. All the functions seen above 
+can be applied to the output.
+
+```{r}
+fpd <- gfilmmPredictive(fidSims, newdata = data.frame(x = c(1, 30)))
+gfiSummary(fpd)
+```
+
+Compare with the frequentist approach:
+
+```{r}
+predict(lmfit, newdata = data.frame(x = c(1, 30)), interval = "prediction")
+```
+
 
 
 ## A mixed model

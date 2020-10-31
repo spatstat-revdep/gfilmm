@@ -61,7 +61,7 @@ for(i in 1L:nsims){
     gfiConfInt(~ sqrt(sigma_group^2 + sigma_error^2), gfi)
   confint_CV[i,]           <- 
     gfiConfInt(~ sqrt(sigma_group^2 + sigma_error^2)/`(Intercept)`, gfi)
-  gfipred <- gfilmmPredictive(gfi, as.data.frame(matrix(nrow=1L,ncol=0L)))
+  gfipred <- gfilmmPredictive(gfi, NULL)
   predint[i,] <- gfiConfInt(~ y1, gfipred)
   # frequentist
   aovfit <- aov1r(y ~ group)

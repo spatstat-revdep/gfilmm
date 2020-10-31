@@ -3,7 +3,9 @@
 #'   distributions.
 #'
 #' @param gfi a \code{\link{gfilmm}} object
-#' @param newdata dataframe in which to look for variables with which to predict
+#' @param newdata dataframe in which to look for variables with which to 
+#'   predict, or \code{NULL} if the model is an intercept-only model without 
+#'   random effect 
 #'
 #' @return A list with two fields: \code{FPD}, a dataframe containing the 
 #'   simulations, and \code{WEIGHT}, their weight. This is a \code{gfilmm} 
@@ -12,11 +14,21 @@
 #' @importFrom stats model.matrix rnorm
 #' @importFrom utils head tail
 #' @export
+#' 
+#' @note Actually the levels of the random effects given in \code{newdata} can 
+#'   be different from the original levels. For instance, in the example 
+#'   provided below, we enter \code{block = c("4","6")}, but we could also 
+#'   enter \code{block = c("A","B")}, even though \code{"A"} and \code{"B"} 
+#'   are not some levels of the \code{block} factor. Both options only mean 
+#'   that the two observations to predict are in two different blocks.  
 #'
 #' @examples gfi <- gfilmm(~ cbind(yield-0.1, yield+0.1), ~ N, ~ block, npk, 2000)
-#' fpd <- gfilmmPredictive(gfi, data.frame(N = c("0","0"), block = c("4","6")))
+#' fpd <- gfilmmPredictive(gfi, data.frame(N = c("0","1"), block = c("4","6")))
 #' gfiSummary(fpd)
 gfilmmPredictive <- function(gfi, newdata){
+  if(is.null(newdata) || missing(newdata)){
+    newdata <- as.data.frame(matrix(nrow = 1L, ncol = 0L))
+  }
   if(anyDuplicated(newdata)){
     stop(
       "There are some duplicated rows in `newdata`."

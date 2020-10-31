@@ -7,6 +7,7 @@
 ^inst/cpp$
 ^inst/docs$
 ^inst/predictive$
+^inst/julia$
 ^inst/TODO\.txt$
 ^doc$
 ^Meta$

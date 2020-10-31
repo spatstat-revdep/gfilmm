@@ -61,7 +61,7 @@ for(i in 1L:nsims){
     gfiConfInt(~ sqrt(sigma_group^2 + sigma_error^2), gfi)
   confint_CV[i,]           <- 
     gfiConfInt(~ sqrt(sigma_group^2 + sigma_error^2)/`(Intercept)`, gfi)
-  gfipred <- gfilmmPredictive(gfi, NULL)
+  gfipred <- gfilmmPredictive(gfi, data.frame(group = "x"))
   predint[i,] <- gfiConfInt(~ y1, gfipred)
   # frequentist
   aovfit <- aov1r(y ~ group)
@@ -72,10 +72,10 @@ for(i in 1L:nsims){
   fconfint_sigmaTotal[i,]   <- unlist(cis["total", c("lwr", "upr")])
   fpredint[i,] <- predict(aovfit)
   cis <- pconfint(aovfit)
-  pconfint_grandMean[i,]    <- cis[["cis"]]$GPQ_mu
-  pconfint_sigmaBetween[i,] <- cis[["cis"]]$GPQ_sigma2b
-  pconfint_sigmaWithin[i,]  <- cis[["cis"]]$GPQ_sigma2w
-  pconfint_sigmaTotal[i,]   <- cis[["cis"]]$GPQ_sigmatot
+  pconfint_grandMean[i,]    <- cis[["conf"]]$GPQ_mu
+  pconfint_sigmaBetween[i,] <- cis[["conf"]]$GPQ_sigma2b
+  pconfint_sigmaWithin[i,]  <- cis[["conf"]]$GPQ_sigma2w
+  pconfint_sigmaTotal[i,]   <- cis[["conf"]]$GPQ_sigmatot
   gpredint[i,] <- cis[["pred"]]
 }
 
@@ -93,7 +93,10 @@ results <- list(
   pgrandMean = pconfint_grandMean,
   psigmaWithin = pconfint_sigmaWithin,
   psigmaBetween = pconfint_sigmaBetween,
-  psigmaTotal = pconfint_sigmaTotal
+  psigmaTotal = pconfint_sigmaTotal,
+  predint = predint,
+  fpredint = fpredint,
+  gpredint = gpredint
 )
 
 saveRDS(results, "~/Work/R/gfilmm/inst/simulations/simulations04.rds")

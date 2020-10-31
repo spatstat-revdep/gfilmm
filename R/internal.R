@@ -59,12 +59,8 @@ getZ <- function(RE2){
 
 #' @importFrom stats get_all_vars
 #' @noRd
-getCovariates <- function(data, fixed, random){ # tester fixed = ~1
-  fiFrame <- get_all_vars(fixed, data)
-  if(is.null(random)) random <- ~ 0
-  raFrame <- get_all_vars(random, data)
-  nms <- union(names(fiFrame), names(raFrame))
-  frame <- cbind(fiFrame, raFrame)[nms]
+getCovariates <- function(data, fixed){ 
+  frame <- get_all_vars(fixed, data)
   continuous <- vapply(frame, is.numeric, logical(1L))
   list(
     continuous  = names(frame)[continuous],

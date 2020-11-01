@@ -37,9 +37,12 @@ function fid_vertex(
     end
     for ii = 1:length(whichl)
       INT2 = INT[CB[:, ii], :]
+      print(INT2)
       use = findall(sum(INT2, dims=1) .== dim - 1) # sum sur colonne
+      print(use)
       for dd = 1:length(use)
         inter = CB[findall(INT2[:, use[dd]] .== 1), ii]  #this will be intersection
+        print(inter)
         vert = vert + 1
         CCtemp = [CCtemp [inter; k + n]]  # ATTENTION A VERIFIER need to add n indicating lower constraint
         lambda = (L - VTsum[whichl[ii]]) /
@@ -56,20 +59,36 @@ function fid_vertex(
     for ll = 1:length(checku) #check lower constraints first
       INT[CA[:, ll], ll] .= 1
     end
-    for ii = 1:length(whichu)
+    for ii in 1:length(whichu)
+      print("\nINT2 below\n")
       INT2 = INT[CB[:, ii], :]
-      use = findall(sum(INT2, dims=1) .== dim - 1)
-      for dd = 1:length(use)
-        inter = CB[findall(INT2[:, use[dd]] .== 1), ii]   #this will be intersection
+      use = findall((sum(INT2, dims=1) .== dim - 1)[1, :])
+      print("\n************use*********:\n")
+      print(use)
+      print("\n")
+      print(CB)
+      for dd in 1:length(use)
+        print("\naaaaaaa\n")
+        print(use[dd])
+        print("\n")
+        print(findall((INT2[:, use[dd]] .== 1)[:,1]))
+        print("\nxxx\n")
+        inter = CB[findall((INT2[:, use[dd]] .== 1)[:,1]), ii]
+        print(inter)  #this will be intersection
+        print("\n")
         vert = vert + 1
         CCtemp = [CCtemp [inter; k]]  #need to add n indicating lower constraint
         lambda = (U - VTsum[whichu[ii]]) / (VTsum[checku[use[dd]]] - VTsum[whichu[ii]])
+        print("lambda\n")
         VTtemp =
           [VTtemp lambda * VT1[:, checku[use[dd]]] + (1.0 - lambda) * VT1[:, whichu[ii]]]
+        print("VTtemp\n")
       end
     end
   end
   if !isempty(both)
+    print("\n!isempyboth\n")
+    print(both)
     for ll in both # both' ??
       vert = vert + 1
       CCtemp = [CCtemp CC1[:, ll]]
@@ -169,7 +188,7 @@ VT1 = [
   5 5 6 7 7 4 5 4
 ]
 CC1 = [
-  1 1 2 2 1 1 2 2; # plante si head = 3 3
+  3 3 2 2 1 1 2 2; # plante si head = 3 3
   2 1 2 1 2 1 2 1;
   1 1 1 1 2 2 2 2
 ]
@@ -188,9 +207,20 @@ fid_vertex2(VT1, CC1, VTsum, U, L, m, dim, k, n)
 2.0  3.0  4.0  6.0  7.0
 7.0  6.0  5.0  3.0  2.0
 5.0  6.0  7.0  4.0  5.0
-
+,
 1  2  2  1  2
 1  2  1  1  2
 1  1  1  2  2
-
+,
 5
+
+#
+3.5   3.71429  2.0  3.0  4.0  6.0  7.0
+5.5   5.28571  7.0  6.0  5.0  3.0  2.0
+6.25  6.14286  5.0  6.0  7.0  4.0  5.0
+,
+2.0  1.0  3.0  2.0  2.0  1.0  2.0
+ 1.0  1.0  1.0  2.0  1.0  1.0  2.0
+ 2.0  2.0  1.0  1.0  1.0  2.0  2.0
+,
+7

@@ -562,7 +562,7 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
         int vert = 0;
         size_t lcheckl = checkl.size();
         size_t lwhichl = whichl.size();
-        if(lcheckl < p){
+        if(lcheckl != 0){
           Eigen::MatrixXi CA(Dim, lcheckl); 
           Eigen::MatrixXi CB(Dim, lwhichl);
           for(size_t h=0; h < Dim; h++){
@@ -634,7 +634,7 @@ Rcpp::List gfilmm_(Eigen::VectorXd L, Eigen::VectorXd U,
         }
         size_t lchecku = checku.size();
         size_t lwhichu = whichu.size();
-        if(lchecku < p){
+        if(lchecku != 0){
           Eigen::MatrixXi CA(Dim, lchecku); 
           Eigen::MatrixXi CB(Dim, lwhichu);
           for(size_t h=0; h < Dim; h++){

@@ -53,7 +53,7 @@ for(i in 1L:nsims){
     group = group
   )
   gfi <- gfilmm(~ cbind(ylwr, yupr), fixed = ~ 1, random = ~ group, 
-                data = dat, N = 3000L)
+                data = dat, N = 15000L)
   confint_grandMean[i,]    <- gfiConfInt(~ `(Intercept)`, gfi)
   confint_sigmaBetween[i,] <- gfiConfInt(~ sigma_group, gfi)
   confint_sigmaWithin[i,]  <- gfiConfInt(~ sigma_error, gfi)
@@ -99,10 +99,12 @@ results <- list(
   gpredint = gpredint
 )
 
-saveRDS(results, "~/Work/R/gfilmm/inst/simulations/simulations04.rds")
+saveRDS(results, "~/Work/R/gfilmm/inst/simulations/simulations05.rds")
+
+stop("X")
 
 ################################################################################
-results <- readRDS("~/Work/R/gfilmm/inst/simulations/simulations04.rds")
+results <- readRDS("~/Work/R/gfilmm/inst/simulations/simulations05.rds")
 
 cvrg_twoSided <- c(
   sum(results$grandMean[,1] <= mu & mu <= results$grandMean[,2]),
@@ -212,6 +214,16 @@ dat <- data.frame(
   y2 = results$fsigmaTotal[,2],
   z1 = results$psigmaTotal[,1],
   z2 = results$psigmaTotal[,2]
+)
+
+dat <- data.frame(
+  x = 1:nsims,
+  x1 = results$predint[,1],
+  x2 = results$predint[,2],
+  y1 = results$fpredint[,1],
+  y2 = results$fpredint[,2],
+  z1 = results$gpredint[,1],
+  z2 = results$gpredint[,2]
 )
 
 amDumbbellChart(

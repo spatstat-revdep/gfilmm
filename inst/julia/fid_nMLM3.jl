@@ -383,17 +383,17 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
     ZZ = cell(ree, 1)
     VTVT = cell(1, N)
     #ZZZZZ = Z -->> not used
-    for i = 1:N
-      iiii = i
-      Ztemp = cell(ree, 1)
-      VTtemp = VT[1, i]
-      n1 = sort([K1; K_start])
-      nn = cell(ree, 1)
-      for ii = 1:ree
-        nn[ii, 1] = unique(RE2[vec(n1), ii])
-        Ztemp[ii, 1] = Z[ii, 1][nn[ii, 1], i]  #copy Z
+    for i in 1:N
+      # iiii = i -->> not used
+      Ztemp = Vector{Vector{Float64}}(undef, ree)
+      VTtemp = VT[i]
+      n1 = sort(hcat(K1, K_start))
+      nn = Vector{Vector{Int64}}(undef, ree)
+      for ii in 1:ree
+        nn[ii] = unique(RE2[n1, ii])
+        Ztemp[ii] = Z[ii][nn[ii], i]  #copy Z
         if i == 1 # initialisation que pour i=1
-          ZZ[ii, 1] = zeros(size(Ztemp[ii, 1], 1), 0)
+          ZZ[ii] = zeros(Float64, length(Ztemp[ii]), 0)
         end
       end
       ord = sortbycol([[1:ree]'; rand(1, ree)]', 2)
@@ -401,112 +401,113 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
       ord = convert(Array{Int,2}, ord)
       for kk in ord
         CO = RE
-        XX = zeros(size(RE, 1), 0)
-        eff = [1:ree]
-        eff = setminus(kk, eff)
+        XX = zeros(Float64, size(RE, 1), 0)
+        eff = 1:ree
+        eff = setdiff(eff, kk)
         for jj in eff
-          XX = [XX RE[:, ESUM[jj]-E[jj]+1:ESUM[jj]-E[jj]+length(nn[jj, 1])] *
-              Ztemp[jj, 1]]
+          XX = hcat(XX, RE[:, (ESUM[jj]-E[jj]+1):(ESUM[jj]-E[jj]+length(nn[jj]))) *
+              Ztemp[jj]]
         end
         #temp=find(RE2[:,kk].!=0)  #find which levels of kk have been sampled
-        Z1 = Ztemp[kk, 1]  #Z being resampled
-        CO2 = RE[:, ESUM[kk]-E[kk]+1:ESUM[kk]-E[kk]+length(nn[kk, 1])]  # c'?tait E[:,kk] mais une seule ligne
-        level0 = find(sum(abs(CO2), 1) .== 0) #levels not sampled yet
-        Z0 = find(Z1 .== 0)  #Z's not sampled
-        Z00 = [1:length(Z1)]
-        Z00 = setminus(Z0, Z00) #These are the levels with Z for effect kk
-        CO2 = CO2[:, setminus(level0, 1:size(CO2, 2))]
-        Z1 = setminus(Z0, Z1)
+        Z1 = Ztemp[kk]  #Z being resampled
+        CO2 = RE[:, (ESUM[kk]-E[kk]+1):(ESUM[kk]-E[kk]+length(nn[kk]))]  # c'?tait E[:,kk] mais une seule ligne
+        level0 = findall(count(.==(0), CO2, dims=1)) #levels not sampled yet
+        Z0 = findall(Z1 .== 0)  #Z's not sampled
+        Z00 = setdiff(1:length(Z1), Z0) #These are the levels with Z for effect kk
+        CO2 = CO2[:, setdiff(1:size(CO2, 2), level0)]
+        Z1 = setdiff(Z1, Z0)
         if fe > 0
-          XX = [FE XX]
+          XX = hcat(FE, XX)
         end
-        MAT = [-XX CO2]
-        MMMAT = MAT
-        COOO2 = CO2
-        if rank(MAT) < length(MAT[1, :])
-          NUL = null(MAT) #
-          n1 = NUL[1:length(NUL[:, 1])-length(CO2[1, :]), :]
-          n2 = NUL[length(NUL[:, 1])-length(CO2[1, :])+1:end, :]
-          O2 = orth(n2)  # rank(O2) = ncol(NUL) ?
+        MAT = hcat(-XX, CO2)
+        #MMMAT = MAT
+        #COOO2 = CO2
+        if rank(MAT) < size(MAT, 2)
+          NUL = nullspace(MAT) #
+          n1 = NUL[1:size(NUL, 1) - size(CO2, 2), :]
+          n2 = NUL[(size(NUL, 1) - size(CO2, 2) + 1):end, :]
+          O2 = qr(n2).Q  # rank(O2) = ncol(NUL) ?
           B = CO2 * O2
           O1 = XX \ B
           a = O2' * Z1
           b = sqrt((Z1 - O2 * a)' * (Z1 - O2 * a))
           tau = (Z1 - O2 * a) / b
-          OOO2 = O2
-          ZZZ1 = Z1
-          AAAA = max(size(Z1)) - rank(O2)
-          bb = sqrt(randchi2(max(size(Z1)) - rank(O2)))
+          #OOO2 = O2
+          #ZZZ1 = Z1
+          #AAAA = max(size(Z1)) - rank(O2)
+          bb = rand(Chisq(maximum(size(Z1)) - rank(O2)))
           bbb = (b/bb)[1] #
           aa = randn(rank(O2), 1)
-          Ztemp[kk, 1][Z00, 1] = O2 * aa + bb * tau
-          vert = setminus(fe + kk, [1:dim])
+          Ztemp[kk][Z00] = O2 * aa + bb * tau
+          vert = setdiff(1:dim, fe + kk)
           for jj = 1:VC[i]
-            VTtemp[vert, jj] = VTtemp[vert, jj] - VTtemp[fe+kk, jj] * O1 * (bbb * aa - a)
-            VTtemp[fe+kk, jj] = (VTtemp[fe+kk, jj]*b/bb)[1]
+            VTtemp[vert, jj] -= VTtemp[fe+kk, jj] * O1 * (bbb * aa - a)
+            VTtemp[fe+kk, jj] *= bbb
           end
         else
-          b = sqrt((Z1)' * (Z1))
-          tau = (Z1) / b
-          bb = sqrt(randchi2(max(size(Z1))))
-          Ztemp[kk, 1][Z00, 1] = bb * tau
-          vert = setminus(fe + kk, [1:dim])
-          for jj = 1:VC[i]
-            VTtemp[fe+kk, jj] = (VTtemp[fe+kk, jj]*b/bb)[1]
+          b = sqrt(Z1' * Z1)
+          tau = Z1 / b
+          bb = rand(Chisq(maximum(size(Z1))))
+          bbb = b[1]/bb
+          Ztemp[kk][Z00] = bb * tau
+          vert = setminus(1:dim, fe + kk)
+          for jj in 1:VC[i]
+            VTtemp[fe+kk, jj] *= bbb
           end
         end
       end
-      for ii = 1:ree
-        ZZ[ii, 1] = [ZZ[ii, 1] Ztemp[ii, 1]]
+      for ii in 1:ree
+        ZZ[ii] = hcat(ZZ[ii], Ztemp[ii])
       end
-      VTVT[1, i] = VTtemp
+      VTVT[i] = VTtemp
     end
     Z = ZZ
     VT = VTVT
+
     #----------------------------------------------------flip negatives
-    for i = 1:N
-      for j = 1:ree #only look at random effects
+    for i in 1:N
+      for j in 1:ree #only look at random effects
         if signs[j, i] == -1
-          VT[1, i][fe+j, :] = -VT[1, i][fe+j, :]  #only need to flip the negatives
-          Z[j, 1][:, i] = -Z[j, 1][:, i]
+          VT[i][fe+j, :] *= -1  #only need to flip the negatives
+          Z[j][:, i] *= -1
         end
       end
     end
     #pick the coordinates
-    VT_end = zeros(fe + ree, N)
-    for i = 1:N
-      for j = 1:ree+fe
-        if rand(1)[1] <= 0.5
+    VT_end = zeros(Float64, dim, N)
+    for i in 1:N
+      for j in 1:dim
+        if rand(1) <= 0.5
           if j <= fe
-            VT_end[j, i] = min(VT[1, i][j, :])
+            VT_end[j, i] = minimum(VT[i][j, :])
           else
-            VT_end[j, i] = max(min(VT[1, i][j, :]), 0)
+            VT_end[j, i] = max(minimum(VT[i][j, :]), 0)
           end
         else
           if j <= fe
-            VT_end[j, i] = max(VT[1, i][j, :])
+            VT_end[j, i] = maximum(VT[i][j, :])
           else
-            VT_end[j, i] = max(max(VT[1, i][j, :]), 0)
+            VT_end[j, i] = max(maximum(VT[i][j, :]), 0)
           end
         end
       end
     end
     if k_n == K_n #if finished pick coordinates
       #pick the coordinates
-      VT_end = zeros(fe + ree, N)
-      for i = 1:N
-        for j = 1:ree+fe
-          if rand(1)[1] <= 0.5
+      VT_end = zeros(Float64, dim, N)
+      for i in 1:N
+        for j = 1:dim
+          if rand(1) <= 0.5
             if j <= fe
-              VT_end[j, i] = min(VT[1, i][j, :])
+              VT_end[j, i] = minimum(VT[i][j, :])
             else
-              VT_end[j, i] = max(min(VT[1, i][j, :]), 0)
+              VT_end[j, i] = max(minimum(VT[i][j, :]), 0)
             end
           else
             if j <= fe
-              VT_end[j, i] = max(VT[1, i][j, :])
+              VT_end[j, i] = maximum(VT[i][j, :])
             else
-              VT_end[j, i] = max(max(VT[1, i][j, :]), 0)
+              VT_end[j, i] = max(maximum(VT[i][j, :]), 0)
             end
           end
         end

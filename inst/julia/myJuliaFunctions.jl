@@ -20,7 +20,7 @@ end
 sortbycol = function (M, j)
   local col, perm
   col = M[:, j]
-  perm = sortperm(col)[2]
+  perm = sortperm(col)#[2]
   return (M[perm, :])
 end
 ## remove the elements of B belonging to A e.g. setminus0([2 3 4], [1:7]) = [1 5 6 7]

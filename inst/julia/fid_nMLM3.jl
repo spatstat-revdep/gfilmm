@@ -316,7 +316,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
             ##########################################################
             if copy > 0
               for rr in 1:rep # -->> ? rep = 1 (declared at the beginning)
-                ord = sortbycol([1:ree rand(ree)]', 2)
+                ord = sortbycol(hcat(1:ree, rand(ree)), 2)
                 ord = ord[:, 1]'  #Order to resample.  Each re will be resampled.
                 ord = convert(Vector{Int64}, vec(ord))
                 for kk in ord
@@ -429,7 +429,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
           ZZ[ii] = zeros(Float64, length(Ztemp[ii]), 0)
         end
       end
-      ord = sortbycol([1:ree rand(ree)]', 2)
+      ord = sortbycol(hcat(1:ree, rand(ree)), 2)
       ord = ord[:, 1]'  #Order to resample.  Each re will be resampled.
       ord = convert(Array{Int,2}, ord)
       for kk in ord

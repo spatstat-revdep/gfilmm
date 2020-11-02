@@ -26,7 +26,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
   #ESS = []
   #p = []
   #r = []
-  local WT, VERTEX, WEIGHT, VTtemp
+  local WT, VERTEX, WEIGHT, VTtemp, VCtemp
 
   n = size(data, 1)
   random_design = 1
@@ -161,7 +161,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
     for ii in 1:(2^dim) #number of vertices
       II = USE[ii, :]  #constraints to use are by row
       AA = hcat(vcat(FE, -FE), vcat(A[i], -A[i])) # ? sortir de cette boucle
-      b = vcat(U, -L)
+      b = vcat(U, -L) # ça aussi
       AA = AA[II, :]
       b = b[II]
       V[:, ii] = AA \ b
@@ -197,7 +197,8 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
         end
       end
       for i in 1:N
-#        m = convert(Int, VC[1, i])
+        #m = convert(Int, VC[1, i])
+        m = VC[i]
         VT1 = VT[i]  #vertex values
         print("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n")
         print(VT1)
@@ -230,16 +231,19 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
         print(VTsum)
         print("\n")
         (ZZ, wt) = fid_sample(VT2, VTsum, U[k], L[k]) ###Sample -
+        if wt == 0.0
+        #  error("wt 0")
+        end
         Z[effect][k, i] = ZZ
         weight[effect][k, i] = wt # -->> only one 'weight' object is used !
         VTsum += Z[effect][k, i] * VT2
         VT1 = VT[i]
         CC1 = CC[i]
-#        (VTtemp, CCtemp, vert) = fid_vertex(VT1, CC1, VTsum, U[k], L[k], dim, k, n) # -->> I removed the 'm'
-#        VC[i] = vert
-#        CC[i] = CCtemp
-#        VT[i] = VTtemp
-        (VT[i], CC[i], VC[i]) = fid_vertex(VT1, CC1, VTsum, U[k], L[k], dim, k, n) # -->> I removed the 'm'
+        #        (VTtemp, CCtemp, vert) = fid_vertex(VT1, CC1, VTsum, U[k], L[k], dim, k, n) # -->> I removed the 'm'
+        #        VC[i] = vert
+        #        CC[i] = CCtemp
+        #        VT[i] = VTtemp
+        (VT[i], CC[i], VC[i]) = fid_vertex0(VT1, CC1, VTsum, U[k], L[k], m, dim, k, n) # -->> I removed the 'm'
         VTtemp = VT[i]
         VCtemp = VC[i]
         if VC[i] == 0 #check
@@ -250,6 +254,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
           println(VTsum)
           println([U[k] L[k]])
           println(i)
+          println(wt)
           error("STOP")
           weight[effect][k, i] = 0
         end
@@ -270,7 +275,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
       ESS[k] = 1 / (WT' * WT)
       # ESSS[k] = ESS[k, 1] -->> notused
       #---------------------------------------------------------------Resample
-      if ESS[k] < thresh && k < K[end] - 1 # -->> pourquoi -1 ?
+      if ESS[k] < thresh && k < K[end] #- 1 # -->> pourquoi -1 ?
         u = zeros(Float64, N)
         N_sons = zeros(Int64, N)
         # generate the cumulative distribution
@@ -286,8 +291,8 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
           N_sons[j] += 1
         end
         #KEEP[k,:]=N_sons
-#        II = setdiff(1:n, union(1:k, C))
-#        JJ = setdiff(1:n, II)
+        #        II = setdiff(1:n, union(1:k, C))
+        #        JJ = setdiff(1:n, II)
         JJ = union(1:k, K_start)
         ZZ = Vector{Array{Float64,2}}(undef, ree)
         for ii in 1:ree
@@ -339,7 +344,8 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
                       NUL = nullspace(MAT) #
                       n1 = NUL[1:size(NUL, 1) - size(CO2, 2), :]
                       n2 = NUL[(size(NUL, 1) - size(CO2, 2)+1):end, :]
-                      O2 = qr(n2).Q[1:size(n2, 1), 1:size(n2, 2)]
+                      #O2 = qr(n2).Q[1:size(n2, 1), 1:size(n2, 2)]
+                      O2 = orth(n2)
                       B = CO2 * O2
                       O1 = XX \ B
                       a = O2' * Z1
@@ -347,7 +353,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
                       tau = (Z1 - O2 * a) / b
                       #AAA = length(Z1) - rank(O2)
                       bb = rand(Chisq(length(Z1) - rank(O2))) # -->> rank O2 is ncol or nrow
-#                      bb = sqrt(randchi2(max(size(Z1)) - rank(O2)))
+                      #                      bb = sqrt(randchi2(max(size(Z1)) - rank(O2)))
                       bbb = b/bb #
                       aa = randn(rank(O2), 1) # -->> idem rank O2
                       Ztemp[kk][Z00, ii] = O2 * aa + bb * tau
@@ -451,10 +457,11 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
         #COOO2 = CO2
         if rank(MAT) < size(MAT, 2) # -->> was 2
           NUL = nullspace(MAT) #
-          n1 = NUL[1:size(NUL, 1) - size(CO2, 2), :]
+          n1 = NUL[1:(size(NUL, 1) - size(CO2, 2)), :]
           n2 = NUL[(size(NUL, 1) - size(CO2, 2) + 1):end, :]
-          O2 = qr(n2).Q[1:size(n2, 1), 1:size(n2, 2)]  # rank(O2) = ncol(NUL) ?
           print("\nn2")
+          O2 = orth(n2)
+#          O2 = qr(n2).Q[1:size(n2, 1), 1:size(n2, 2)]  # rank(O2) = ncol(NUL) ?
           print(n2)
           print("\nO2")
           print(O2)
@@ -561,5 +568,6 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
   end
   return (VERTEX, WEIGHT)
 end
+
 
 fid_nMLM(data, FE, RE, 2, 1.0)

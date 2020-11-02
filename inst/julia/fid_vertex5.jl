@@ -4,6 +4,7 @@ function fid_vertex(
   VTsum::Vector{R},
   Uk::R,
   Lk::R,
+  p,
   dim::Int64,
   k::Int64,
   n::Int64,
@@ -22,7 +23,7 @@ function fid_vertex(
   lwhichu = p - lchecku
   #
   CCtemp = zeros(Int64, dim, 0)
-  VTtemp = zeros(R, dim, 0)
+  VTtemp = zeros(Float64, dim, 0)
   vert = 0
   #
   CA = CCi[:, checkl]
@@ -67,6 +68,7 @@ function fid_vertex(
     for ii in 1:lwhichu
       INT2 = INT[CB[:, ii], :]
       use = findall(count(==(1), INT2, dims=1)[1, :] .== dim-1)
+      println(use)
       vert = vert + length(use)
       for dd in use
         inter = CB[findall(INT2[:, dd] .== 1), ii]  #this will be intersection

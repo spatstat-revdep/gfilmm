@@ -6,7 +6,7 @@ function orth(A)
   else
     (U, S, V) = svd(A)
     (rows, cols) = size(A)
-    tol = max(size(A)) * S[1] * eps()
+    tol = maximum(size(A)) * S[1] * eps()
     r = sum(S .> tol)
     if (r > 0)
       retval = -U[:, 1:r]
@@ -34,7 +34,7 @@ function setminus0(A, B)
   end
   return (BminusA)
 end
-## remove the elements of B whose indices belong to A 
+## remove the elements of B whose indices belong to A
 ## e.g. setminus([2 3 4], ["one" "two" "three" "four" "five" "six" "seven"]) = ["one" "five" "six" "seven"]
 function setminus(A, B)
   return (B[setminus0(A, [1:length(B)])])

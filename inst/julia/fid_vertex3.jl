@@ -1,4 +1,4 @@
-function fid_vertex(
+function fid_vertex0(
   VT1::Array{R},
   CC1::Array{Int64},
   VTsum::Vector{R},
@@ -38,7 +38,7 @@ function fid_vertex(
     for ii = 1:length(whichl)
       INT2 = INT[CB[:, ii], :]
       print(INT2)
-      use = findall(sum(INT2, dims=1) .== dim - 1) # sum sur colonne
+      use = findall(vec(sum(INT2, dims=1) .== dim - 1)) # sum sur colonne
       print(use)
       for dd = 1:length(use)
         inter = CB[findall(INT2[:, use[dd]] .== 1), ii]  #this will be intersection
@@ -68,21 +68,21 @@ function fid_vertex(
       print("\n")
       print(CB)
       for dd in 1:length(use)
-        print("\naaaaaaa\n")
-        print(use[dd])
+        #print("\naaaaaaa\n")
+        #print(use[dd])
         print("\n")
-        print(findall((INT2[:, use[dd]] .== 1)[:,1]))
-        print("\nxxx\n")
+        #print(findall((INT2[:, use[dd]] .== 1)[:,1]))
+        #print("\nxxx\n")
         inter = CB[findall((INT2[:, use[dd]] .== 1)[:,1]), ii]
-        print(inter)  #this will be intersection
+        #print(inter)  #this will be intersection
         print("\n")
         vert = vert + 1
         CCtemp = [CCtemp [inter; k]]  #need to add n indicating lower constraint
         lambda = (U - VTsum[whichu[ii]]) / (VTsum[checku[use[dd]]] - VTsum[whichu[ii]])
-        print("lambda\n")
+        #print("lambda\n")
         VTtemp =
           [VTtemp lambda * VT1[:, checku[use[dd]]] + (1.0 - lambda) * VT1[:, whichu[ii]]]
-        print("VTtemp\n")
+        #print("VTtemp\n")
       end
     end
   end
@@ -195,7 +195,7 @@ CC1 = [
 VTsum = [1.0; 2; 4; 5; 9; 3; 5; 7]
 U = 6.0
 L = 2.0
-m = 3
+m = 8
 dim = 3
 k = 2
 n = 18

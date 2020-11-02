@@ -1,4 +1,5 @@
 using LinearAlgebra
+using Distributions # to sample chi²
 
 AAA = []
 AAAA = []
@@ -213,22 +214,22 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
         VTsum = (Z1' * VT1)'
         (ZZ, wt) = fid_sample(VT2, VTsum, U[k], L[k]) ###Sample -
         Z[effect][k, i] = ZZ
-        weight[effect][k, i] = wt # -->> only one 'weight' object is used 
-        VTsum = VTsum + VT2' * Z[effect, 1][k, i]
-        VT1 = VT[1, i]
-        CC1 = convert(Array{Int,2}, CC[1, i])
-        (VTtemp, CCtemp, vert) = fid_vertex(VT1, CC1, VTsum, U[k], L[k], m, dim, k, n)
-        VC[1, i] = vert
-        CC[1, i] = CCtemp
-        VT[1, i] = VTtemp
-        if vert == 0 #check
-          weight[effect, 1][k, i] = 0
+        weight[effect][k, i] = wt # -->> only one 'weight' object is used !
+        VTsum += Z[effect][k, i] * VT2
+        VT1 = VT[i]
+        CC1 = CC[i]
+#        (VTtemp, CCtemp, vert) = fid_vertex(VT1, CC1, VTsum, U[k], L[k], dim, k, n) # -->> I removed the 'm'
+#        VC[i] = vert
+#        CC[i] = CCtemp
+#        VT[i] = VTtemp
+        (VT[i], CC[i], VC[i]) = fid_vertex(VT1, CC1, VTsum, U[k], L[k], dim, k, n) # -->> I removed the 'm'
+        if VC[i] == 0 #check
+          weight[effect][k, i] = 0
         end
       end
-      ZZZZ[k] = Z[effect, 1]
-      WT = cumprod(weight[ree, 1])  #only last re is restricted
-      WT = WT[end, :]
-      KKK = K_n - k_n
+      # ZZZZ[k] = Z[effect, 1] -->> not used
+      WT = cumprod(weight[ree]) #only last re is restricted
+      # KKK = K_n - k_n -->> not used
       if sum(WT) == 0#
         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         print("!!!   Error: possible underflow. !!!")
@@ -238,123 +239,122 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         return ()
       end
-      WT = WT / sum(WT)
-      ESS[k, 1] = 1 / norm(WT)^2
-      ESSS[k] = ESS[k, 1]
+      WT /= sum(WT)
+      ESS[k] = 1 / norm(WT)^2
+      # ESSS[k] = ESS[k, 1] -->> notused
       #---------------------------------------------------------------Resample
-      if ESS[k, 1] < thresh && k < K[end] - 1
-        u = zeros(1, N)
-        N_sons = zeros(Int, 1, N)
+      if ESS[k] < thresh && k < K[end] - 1
+        u = zeros(N)
+        N_sons = zeros(Int, N)
         # generate the cumulative distribution
-        dist = cumsum(WT, 2)
+        dist = N * cumsum(WT)
         aux = rand(1)    # sample uniform rv in [0 1]
-        u = aux[1, 1] + [0:(N-1)]
-        u = u ./ N
+        u = aux + (0:(N-1))
+        #u = u ./ N -->> I multiplied 'dist' by N instead
         j = 1
-        for i = 1:N
-          while (u[i, 1] > dist[1, j])
-            j = j + 1
+        for i in 1:N
+          while (u[i] > dist[j])
+            j += 1
           end
-          N_sons[1, j] = N_sons[1, j] + 1
+          N_sons[j] += 1
         end
         #KEEP[k,:]=N_sons
-        II = setminus(unique([[1:k]; C[1, 1]]), [1:n])
-        JJ = setminus(II, [1:n])
-        ZZ = cell(ree, 1)
-        for ii = 1:ree
-          ZZ[ii, 1] = zeros(size(Z[ii, 1], 1), 0) # initialisation matrice vide
+        II = setdiff(1:n, union(1:k, C))
+        JJ = setdiff(1:n, II)
+        ZZ = Vector{Array{Float64,2}}(undef, ree)
+        for ii in 1:ree
+          ZZ[ii] = zeros(Float64, size(Z[ii], 1), 0) # initialisation matrice vide
         end
-        VCVC = zeros(1, N)
-        CCCC = cell(1, N)
-        VTVT = cell(1, N)
-        for i = 1:N
-          if N_sons[1, i] > 0
-            VCtemp = VC[i] * ones(1, N_sons[1, i])
-            Ztemp = cell(ree, 1)
-            VTtemp = cell(1, N_sons[1, i])
-            copy = N_sons[1, i] - 1  # # to be resampled
-            for ii = 1:N_sons[1, i]
-              VTtemp[1, ii] = VT[1, i]  #copy original vertices
+        VCVC = zeros(Int64, N)
+        CCCC = Vector{Array{Int64,2}}(undef, N)
+        VTVT = Vector{Array{Float64,2}}(undef, N)
+        for i in 1:N
+          if N_sons[i] > 0
+            VCtemp = VC[i] * ones(Int64, 1, N_sons[i])
+            Ztemp = Vector{Array{Float64,2}}(undef, ree)
+            VTtemp = Vector{Array{Float64,2}}(undef, N_sons[i])
+            copy = N_sons[i] - 1  # # to be resampled
+            for ii in 1:N_sons[i]
+              VTtemp[ii] = VT[i]  #copy original vertices
             end
-            for ii = 1:ree
-              Ztemp[ii, 1] = repmat(Z[ii, 1][:, i], 1, N_sons[1, i])  #copy Z
+            for ii in 1:ree
+              Ztemp[ii] = repeat(Z[ii][:, i], outer = (1, N_sons[i]))  #copy Z
             end
             ##########################################################
             if copy > 0
-              for rr = 1:rep
+              for rr in 1:rep # -->> ? rep = 1 (declared at the beginning)
                 ord = sortbycol([[1:ree]'; rand(1, ree)]', 2)
                 ord = ord[:, 1]'  #Order to resample.  Each re will be resampled.
                 ord = convert(Array{Int,1}, vec(ord))
                 for kk in ord
-                  for ii = 1:copy
+                  for ii in 1:copy
                     CO = RE[JJ, :]
-                    XX = zeros(n, 0)
-                    for jj = 1:ree
-                      XX = [XX RE[:, ESUM[jj]-E[jj]+1:ESUM[jj]] * Ztemp[jj, 1][:, ii]]
+                    XX = zeros(Float64, n, 0)
+                    for jj in 1:ree
+                      XX = hcat(XX, RE[:, (ESUM[jj]-E[jj]+1):ESUM[jj]] * Ztemp[jj][:, ii])
                     end
                     XX = XX[JJ, :]
-                    XX = XX[:, setminus(kk, [1:size(XX, 2)])] #remove column of effect to be resampled
-                    temp = find(RE2[JJ, kk] .!= 0)  #find which levels of kk have been sampled
-                    Z1 = Ztemp[kk, 1][unique(RE2[JJ[temp], kk]), ii]  #Z being resampled
-                    CO2 = RE[JJ, [ESUM[kk]-E[kk]+1:ESUM[kk]]]
-                    level0 = find(sum(abs(CO2), 1) .== 0) #levels not sampled yet
-                    Z0 = find(Z1 .== 0)  #Z's not sampled
-                    Z00 = setminus(Z0, [1:length(Z1)]) #These are the levels with Z for effect kk
-                    CO2 = CO2[:, setminus(level0, [1:size(CO2, 2)])]
-                    Z1 = setminus(Z0, Z1)
+                    XX = XX[:, setdiff(1:size(XX, 2), kk)] #remove column of effect to be resampled
+                    temp = RE2[JJ, kk] .!= 0  #find which levels of kk have been sampled
+                    Z1 = Ztemp[kk][unique(RE2[JJ[temp], kk]), ii]  #Z being resampled
+                    CO2 = RE[JJ, [(ESUM[kk]-E[kk]+1):ESUM[kk]]]
+                    level0 = findall(sum(abs(CO2), 1) .== 0) #levels not sampled yet # -->> TO REPLACE WITH count
+                    Z0 = findall(Z1 .== 0.0)  #Z's not sampled
+                    Z00 = setdiff(1:length(Z1), Z0) #These are the levels with Z for effect kk
+                    CO2 = CO2[:, setminus(1:size(CO2, 2), level0)]
+                    Z1 = setdiff(Z1, Z0) # -->> was setminus(Z0, Z1) --- maybe use setdiff!
                     if fe > 0
-                      XX = [FE[JJ, :] XX]
+                      XX = hcat(FE[JJ, :], XX)
                     end
-                    MAT = [-XX CO2]
-                    if rank(MAT) < length(MAT[1, :])
-                      NUL = null(MAT) #
-                      n1 = NUL[1:length(NUL[:, 1])-length(CO2[1, :]), :]
-                      n2 = NUL[length(NUL[:, 1])-length(CO2[1, :])+1:end, :]
-                      O2 = orth(n2)
+                    MAT = hcat(-XX, CO2)
+                    if rank(MAT) < size(MAT, 2)
+                      NUL = nullspace(MAT) #
+                      n1 = NUL[1:size(NUL, 1) - size(CO2, 2), :]
+                      n2 = NUL[(size(NUL, 1) - size(CO2, 2)+1):end, :]
+                      O2 = qr(n2).Q
                       B = CO2 * O2
                       O1 = XX \ B
                       a = O2' * Z1
                       b = sqrt((Z1 - O2 * a)' * (Z1 - O2 * a))
                       tau = (Z1 - O2 * a) / b
-                      AAA = max(size(Z1)) - rank(O2)
-                      bb = sqrt(randchi2(max(size(Z1)) - rank(O2)))
+                      AAA = maximum(size(Z1)) - rank(O2)
+                      bb = rand(Chisq(maximum(size(Z1)) - rank(O2))) # -->> rank O2 is ncol or nrow
+#                      bb = sqrt(randchi2(max(size(Z1)) - rank(O2)))
                       bbb = (b/bb)[1] #
-                      aa = randn(rank(O2), 1)
-                      Ztemp[kk, 1][Z00, ii] = O2 * aa + bb * tau
-                      vert = setminus(fe + kk, [1:dim])
-                      for jj = 1:VC[i]
+                      aa = randn(rank(O2), 1) # -->> idem rank O2
+                      Ztemp[kk][Z00, ii] = O2 * aa + bb * tau
+                      vert = setdiff(1:dim, fe + kk)
+                      for jj in 1:VC[i]
                         check1 =
-                          XX * VTtemp[1, ii][vert, jj] + VTtemp[1, ii][fe+kk, jj] * CO2 * Z1
-                        VTtemp[1, ii][vert, jj] =
-                          VTtemp[1, ii][vert, jj] -
-                          VTtemp[1, ii][fe+kk, jj] * O1 * (bbb * aa - a)
-                        VTtemp[1, ii][fe+kk, jj] = (VTtemp[1, ii][fe+kk, jj]*b/bb)[1, 1]
-                        check2 =
-                          XX * VTtemp[1, ii][vert, jj] +
-                          VTtemp[1, ii][fe+kk, jj] * CO2 * (O2 * aa + bb * tau)
+                          XX * VTtemp[ii][vert, jj] + VTtemp[ii][fe+kk, jj] * CO2 * Z1
+                        VTtemp[ii][vert, jj] -=
+                          VTtemp[ii][fe+kk, jj] * O1 * (bbb * aa - a)
+                        VTtemp[ii][fe+kk, jj] *= bbb
+                        check2 = XX * VTtemp[ii][vert, jj] +
+                          VTtemp[ii][fe+kk, jj] * CO2 * (O2 * aa + bb * tau)
                       end
                     else
-                      b = sqrt((Z1)' * (Z1))
-                      tau = (Z1) / b
-                      bb = sqrt(randchi2(max(size(Z1))))
-                      Ztemp[kk, 1][Z00, ii] = bb * tau
-                      vert = setminus(fe + kk, [1:dim])
-                      for jj = 1:VC[i]
-                        VTtemp[1, ii][fe+kk, jj] = VTtemp[1, ii][fe+kk, jj] * b / bb
+                      b = sqrt(Z1' * Z1)
+                      tau = Z1 / b
+                      bb = rand(Chisq(maximum(size(Z1))))
+                      Ztemp[kk][Z00, ii] = bb * tau
+                      vert = setdiff(1:dim, fe + kk)
+                      for jj in 1:VC[i]
+                        VTtemp[ii][fe+kk, jj] *= b / bb
                       end
                     end
                   end
                 end
               end
             end
-            for ii = 1:ree
-              ZZ[ii, 1] = [ZZ[ii, 1] Ztemp[ii, 1]]  # ? c'est pareil que ZZ[ii,1]=2temp[ii,1]
+            for ii in 1:ree
+              ZZ[ii, 1] = hcat(ZZ[ii, 1], Ztemp[ii, 1])  # ? c'est pareil que ZZ[ii,1]=2temp[ii,1]
             end
-            VCVC[1, sum(N_sons[1, 1:i-1])+1:sum(N_sons[1, 1:i])] = VCtemp
-            d = sum(N_sons[1, 1:i-1])
-            for kk = 1:N_sons[1, i]
-              VTVT[1, kk+d] = VTtemp[1, kk]
-              CCCC[1, kk+d] = CC[1, i]
+            VCVC[(sum(N_sons[1:(i-1)])+1):sum(N_sons[1:i])] = VCtemp
+            d = sum(N_sons[1:(i-1)])
+            for kk in 1:N_sons[i]
+              VTVT[kk+d] = VTtemp[kk]
+              CCCC[kk+d] = CC[i]
             end
           end
         end
@@ -362,19 +362,19 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
         VT = VTVT
         VC = VCVC
         CC = CCCC
-        weight[ree, 1] = ones(E[ree], N)  #assign weights of error matrix to 1
+        weight[ree] = ones(Float64, E[ree], N)  #assign weights of error matrix to 1
       end
     end  #ends reampling for k=K1
     #----------------------------------------------------determine signs
-    signs = zeros(ree, N)
+    signs = zeros(Int64, ree, N)
 
-    for i = 1:N
-      for j = 1:ree
-        positive = VT[1, i][fe+j, :] .> 0
-        negative = VT[1, i][fe+j, :] .< 0
-        if sum(sum(abs(positive))) == VC[1, i] #i.e. all are positive
+    for i in 1:N
+      for j in 1:ree
+        positive = VT[i][fe+j, :] .> 0
+        negative = VT[i][fe+j, :] .< 0
+        if count(positive) == VC[i] #i.e. all are positive
           signs[j, i] = 1
-        elseif sum(sum(abs(negative))) == VC[1, i] #i.e. all are negative
+        elseif count(negative) == VC[i] #i.e. all are negative
           signs[j, i] = -1
         end
       end
@@ -382,7 +382,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
     #----------------------------------------------------FINAL RESAMPLE
     ZZ = cell(ree, 1)
     VTVT = cell(1, N)
-    ZZZZZ = Z
+    #ZZZZZ = Z -->> not used
     for i = 1:N
       iiii = i
       Ztemp = cell(ree, 1)

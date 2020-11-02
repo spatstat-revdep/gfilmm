@@ -12,6 +12,12 @@ iiii = []
 ZZZZ = cell(16)
 ESSS = cell(16)
 srand(421)
+
+data = [2.0 3; 3 4; 3 4; 4 5; 5 6; 6 7]
+FE = [1.0; 1; 1; 1; 1; 1]
+RE = [1; 1; 1; 2; 2; 2]
+N = 5
+
 fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::Int64, thresh::R) where {R<:Real}
   global AAA, AAAA, KKK, OOO2, COOO2, ZZZ1, MMMAT, ESSS, ZZZZZ, iiii, ZZZZ
   VERTEX = []
@@ -34,14 +40,14 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
   end
   break_point = 10  # length of steps before recycling
   if !isempty(FE)
-    fe = size(FE,2)
+    fe = size(FE, 2)
   else
     fe = 0  #only error component
   end
 
   ########--------SET-UP RANDOM EFFECTS
   if random_design == 1       # RE is declared.
-    ree = size(RE)[2] + 1
+    ree = size(RE, 2) + 1
     E = zeros(Int64, ree)
     E[ree] = n
     for i in 1:(ree-1)
@@ -55,7 +61,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
       for j in 1:E[i]
         temp1 = RE2[:, i] .== re_levels[j]
         temp2 = zeros(Int64, n)
-        temp2[temp1] = 1
+        temp2[temp1] .= 1
         RE = hcat(RE, temp2)
       end
     end
@@ -96,7 +102,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
 
   A = Vector{Array{Float64,2}}(undef, N)
   for j in 1:N
-    A[j] = zeros(Int64, n, 0)
+    A[j] = zeros(Float64, n, 0)
   end
 
   for i in 1:ree  #Sample all the Z's and set-up the weights
@@ -118,7 +124,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
       A_temp = vcat(AT, AA[k, :])
       if rank(A_temp) > r
         AT = A_temp
-        r = r + 1
+        r += 1
         C = vcat(C, k)
       end
     end
@@ -131,83 +137,83 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
 
   ########--------FIND INITIAL VERTICES
 
-  USE = repmat(C[1, 1]', 2^dim, 1)  #all combinations of I
-  for j = 1:dim
+  USE = repeat(C, outer = (2^dim, 1))  #all combinations of I
+  for j in 1:dim
     if j == 1
-      USE[2^(dim-1)+1:2^(dim), 1] = USE[1:2^(dim-1), 1] + n
+      USE[(2^(dim-1)+1):(2^dim), 1] = USE[1:(2^(dim-1)), 1] + n
     else
       temp = 2^(j - 2) + 1
-      while temp <= 2^(dim)
-        for ii = 1:2^(j-2)
-          USE[temp, j] = USE[temp, j] + n
-          temp = temp + 1
+      while temp <= 2^dim
+        for ii in 1:(2^(j-2))
+          USE[temp, j] += n
+          temp += 1
         end
         temp = temp + 2^(j - 2)
       end
     end
   end
-  for i = 1:N
-    V = zeros(dim, 2^(dim))
+
+  for i in 1:N
+    V = zeros(Float64, dim, 2^dim)
     temp = 0   # ???
-    for ii = 1:2^dim #number of vertices
-      II = vec(USE[ii, :])  #constraints to use are by row
-      AA = [[FE; -FE] [A[i, 1]; -A[i, 1]]] # ? sortir de cette boucle
-      b = [U; -L]
+    for ii in 1:(2^dim) #number of vertices
+      II = USE[ii, :]  #constraints to use are by row
+      AA = hcat(vcat(FE, -FE), vcat(A[i], -A[i])) # ? sortir de cette boucle
+      b = vcat(U, -L)
       AA = AA[II, :]
       b = b[II]
       V[:, ii] = AA \ b
     end
-    VT[1, i] = V
+    VT[i] = V
   end
-  for k = 1:N
-    CC[1, k] = reshape(USE', dim, 2^(dim))  #constraints are the same for all N particles
+  for k in 1:N
+    CC[k] = reshape(USE', dim, 2^dim)  #constraints are the same for all N particles
   end
-  VC = 2^(dim) * ones(Int, 1, N)
+  VC = 2^dim * ones(Int64, N)
 
   ########--------MAIN ALGORITHM
-  K_n = iceil(length(K) / break_point)
-  K_temp = cell(1, K_n)
-  for i = 1:K_n-1
-    K_temp[1, i] = K[(i-1)*break_point+1:i*break_point]
+  K_n = convert(Int64, ceil(length(K) / break_point))
+  K_temp = Vector{Vector{Int64}}(undef, K_n)
+  for i in 1:(K_n-1)
+    K_temp[i] = K[((i-1)*break_point+1):(i*break_point)]
   end
-  K_temp[1, K_n] = K[(K_n-1)*break_point+1:end]
+  K_temp[K_n] = K[((K_n-1)*break_point+1):end]
 
-  K1 = []
-  for k_n = 1:K_n
-    K1 = [K1, K_temp[1, k_n]]
-    WT = []
-    for k in K_temp[1, k_n]
+  K1 = Vector{Int64}(undef, 0)
+  for k_n in 1:K_n
+    K1 = hcat(K1, K_temp[k_n])
+    for k in K_temp[k_n]
       effect = ree  #only have the error term left
       level = k  #the level is the observation we are on
       if k_n > 1
-        for i = 1:ree
-          Z[i, 1] = [Z[i, 1]; randn(E[i] - length(Z[i, 1][:, 1]), N)]
+        for i in 1:ree
+          Z[i] = vcat(Z[i], randn(E[i] - size(Z[i], 1), N))
         end
       end
-      for i = 1:N
-        m = convert(Int, VC[1, i])
-        VT1 = VT[1, i]  #vertex values
+      for i in 1:N
+#        m = convert(Int, VC[1, i])
+        VT1 = VT[i]  #vertex values
         VT2 = VT1[fe+effect, :]  #value to be resampled
         # remove value to be resampled
-        keepcols = setminus(fe + effect, 1:size(VT1, 1))
+        keepcols = setdiff(1:size(VT1, 1), fe + effect)
         VT1 = VT1[keepcols, :]  #
         if fe > 0
           Z1 = FE[k, :]  #Assign fixed effect values
         else
-          Z1 = zeros(1, 0)
+          Z1 = zeros(Float64, 0)
         end
         for j = 1:ree
-          if RE2[k, j] == 0
+          if RE2[k, j] == 0 # -->> it's never 0, I think
             Z1 = [Z1 0]
           else
-            Z1 = [Z1 Z[j, 1][RE2[k, j], i]]
+            Z1 = hcat(Z1, Z[j][RE2[k, j], i])
           end
         end
         Z1 = Z1[keepcols]   #remove column of effect to be sampled
         VTsum = (Z1' * VT1)'
         (ZZ, wt) = fid_sample(VT2, VTsum, U[k], L[k]) ###Sample -
-        Z[effect, 1][k, i] = ZZ
-        weight[effect, 1][k, i] = wt
+        Z[effect][k, i] = ZZ
+        weight[effect][k, i] = wt # -->> only one 'weight' object is used 
         VTsum = VTsum + VT2' * Z[effect, 1][k, i]
         VT1 = VT[1, i]
         CC1 = convert(Array{Int,2}, CC[1, i])

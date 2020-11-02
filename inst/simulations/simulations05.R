@@ -14,7 +14,8 @@ pconfint <- function(fit){
   list(conf = cis, pred = predi)
 }
 
-nsims <- 20L
+nsims <- 4000L
+
 confint_grandMean    <- matrix(NA_real_, nrow = nsims, ncol = 2L)
 confint_sigmaWithin  <- matrix(NA_real_, nrow = nsims, ncol = 2L)
 confint_sigmaBetween <- matrix(NA_real_, nrow = nsims, ncol = 2L)
@@ -38,8 +39,8 @@ sigmaBetween <- 2
 sigmaWithin  <- 3
 sigmaTotal   <- sqrt(sigmaBetween^2 + sigmaWithin^2)
 CV           <- sigmaTotal / mu
-I            <- 3L # number of groups
-J            <- 2L # sample size per group
+I            <- 6L # number of groups
+J            <- 3L # sample size per group
 
 set.seed(666L)
 for(i in 1L:nsims){
@@ -53,7 +54,7 @@ for(i in 1L:nsims){
     group = group
   )
   gfi <- gfilmm(~ cbind(ylwr, yupr), fixed = ~ 1, random = ~ group, 
-                data = dat, N = 15000L)
+                data = dat, N = 8000L)
   confint_grandMean[i,]    <- gfiConfInt(~ `(Intercept)`, gfi)
   confint_sigmaBetween[i,] <- gfiConfInt(~ sigma_group, gfi)
   confint_sigmaWithin[i,]  <- gfiConfInt(~ sigma_error, gfi)

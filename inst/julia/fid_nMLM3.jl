@@ -10,27 +10,28 @@ COOO2 = []
 MMMAT = []
 ZZZZZ = []
 iiii = []
-ZZZZ = cell(16)
-ESSS = cell(16)
-srand(421)
+#ZZZZ = cell(16)
+#ESSS = cell(16)
+#srand(421)
 
 data = [2.0 3; 3 4; 3 4; 4 5; 5 6; 6 7]
-FE = [1.0; 1; 1; 1; 1; 1]
-RE = [1; 1; 1; 2; 2; 2]
-N = 5
+FE = hcat([1.0; 1; 1; 1; 1; 1])
+RE = hcat([1; 1; 1; 2; 2; 2])
+N = 4
 
 fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::Int64, thresh::R) where {R<:Real}
-  global AAA, AAAA, KKK, OOO2, COOO2, ZZZ1, MMMAT, ESSS, ZZZZZ, iiii, ZZZZ
-  VERTEX = []
-  WEIGHT = []
-  ESS = []
-  p = []
-  r = []
+  #global AAA, AAAA, KKK, OOO2, COOO2, ZZZ1, MMMAT, ESSS, ZZZZZ, iiii, ZZZZ
+  #VERTEX = []
+  #WEIGHT = []
+  #ESS = []
+  #p = []
+  #r = []
+  local WT, VERTEX, WEIGHT, VTtemp
 
-  n = size(data,1)
+  n = size(data, 1)
   random_design = 1
   Y = data
-  if size(data,2) == 2
+  if size(data, 2) == 2
     L = Y[:, 1]
     U = Y[:, 2]
   else
@@ -122,7 +123,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
     error("Design is not of full rank")
   else
     for k in 1:n
-      A_temp = vcat(AT, AA[k, :])
+      A_temp = vcat(AT, AA[k, :]')
       if rank(A_temp) > r
         AT = A_temp
         r += 1
@@ -133,15 +134,15 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
 
   K = setdiff(1:n, C)
   K_start = C
-  Z[ree][K, :] = 0  #remove error particles not selected in intitialization
+  Z[ree][K, :] .= 0  #remove error particles not selected in intitialization
   # K will be the values left to be sampled
 
   ########--------FIND INITIAL VERTICES
 
-  USE = repeat(C, outer = (2^dim, 1))  #all combinations of I
+  USE = repeat(C', outer = (2^dim, 1))  #all combinations of I
   for j in 1:dim
     if j == 1
-      USE[(2^(dim-1)+1):(2^dim), 1] = USE[1:(2^(dim-1)), 1] + n
+      USE[(2^(dim-1)+1):(2^dim), 1] = USE[1:(2^(dim-1)), 1] .+ n
     else
       temp = 2^(j - 2) + 1
       while temp <= 2^dim
@@ -168,7 +169,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
     VT[i] = V
   end
   for k in 1:N
-    CC[k] = reshape(USE', dim, 2^dim)  #constraints are the same for all N particles
+    CC[k] = USE' #reshape(USE', dim, 2^dim)  #constraints are the same for all N particles
   end
   VC = 2^dim * ones(Int64, N)
 
@@ -181,8 +182,12 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
   K_temp[K_n] = K[((K_n-1)*break_point+1):end]
 
   K1 = Vector{Int64}(undef, 0)
+  println("§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§")
+  print(K_n)
   for k_n in 1:K_n
-    K1 = hcat(K1, K_temp[k_n])
+    println("§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§")
+    print(k_n)
+    K1 = vcat(K1, K_temp[k_n])
     for k in K_temp[k_n]
       effect = ree  #only have the error term left
       level = k  #the level is the observation we are on
@@ -194,6 +199,9 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
       for i in 1:N
 #        m = convert(Int, VC[1, i])
         VT1 = VT[i]  #vertex values
+        print("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n")
+        print(VT1)
+        print("\n")
         VT2 = VT1[fe+effect, :]  #value to be resampled
         # remove value to be resampled
         keepcols = setdiff(1:size(VT1, 1), fe + effect)
@@ -203,15 +211,24 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
         else
           Z1 = zeros(Float64, 0)
         end
-        for j = 1:ree
+        for j in 1:ree
           if RE2[k, j] == 0 # -->> it's never 0, I think
             Z1 = [Z1 0]
           else
-            Z1 = hcat(Z1, Z[j][RE2[k, j], i])
+            Z1 = vcat(Z1, Z[j][RE2[k, j], i])
           end
         end
         Z1 = Z1[keepcols]   #remove column of effect to be sampled
         VTsum = (Z1' * VT1)'
+        # print("k: ")
+        # print(k)
+        print("\n")
+        print("VT2: ")
+        print(VT2)
+        print("\n")
+        print("VTsum: ")
+        print(VTsum)
+        print("\n")
         (ZZ, wt) = fid_sample(VT2, VTsum, U[k], L[k]) ###Sample -
         Z[effect][k, i] = ZZ
         weight[effect][k, i] = wt # -->> only one 'weight' object is used !
@@ -223,12 +240,22 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
 #        CC[i] = CCtemp
 #        VT[i] = VTtemp
         (VT[i], CC[i], VC[i]) = fid_vertex(VT1, CC1, VTsum, U[k], L[k], dim, k, n) # -->> I removed the 'm'
+        VTtemp = VT[i]
+        VCtemp = VC[i]
         if VC[i] == 0 #check
+          print("\nVC[i] zero\n")
+          println(CC)
+          println(VT1)
+          println(CC1)
+          println(VTsum)
+          println([U[k] L[k]])
+          println(i)
+          error("STOP")
           weight[effect][k, i] = 0
         end
       end
       # ZZZZ[k] = Z[effect, 1] -->> not used
-      WT = cumprod(weight[ree]) #only last re is restricted
+      WT = vec(prod(weight[ree], dims = 1)) #only last re is restricted
       # KKK = K_n - k_n -->> not used
       if sum(WT) == 0#
         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -240,16 +267,16 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
         return ()
       end
       WT /= sum(WT)
-      ESS[k] = 1 / norm(WT)^2
+      ESS[k] = 1 / (WT' * WT)
       # ESSS[k] = ESS[k, 1] -->> notused
       #---------------------------------------------------------------Resample
-      if ESS[k] < thresh && k < K[end] - 1
-        u = zeros(N)
-        N_sons = zeros(Int, N)
+      if ESS[k] < thresh && k < K[end] - 1 # -->> pourquoi -1 ?
+        u = zeros(Float64, N)
+        N_sons = zeros(Int64, N)
         # generate the cumulative distribution
         dist = N * cumsum(WT)
-        aux = rand(1)    # sample uniform rv in [0 1]
-        u = aux + (0:(N-1))
+        aux = rand()    # sample uniform rv in [0 1]
+        u = aux .+ (0:(N-1))
         #u = u ./ N -->> I multiplied 'dist' by N instead
         j = 1
         for i in 1:N
@@ -259,8 +286,9 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
           N_sons[j] += 1
         end
         #KEEP[k,:]=N_sons
-        II = setdiff(1:n, union(1:k, C))
-        JJ = setdiff(1:n, II)
+#        II = setdiff(1:n, union(1:k, C))
+#        JJ = setdiff(1:n, II)
+        JJ = union(1:k, K_start)
         ZZ = Vector{Array{Float64,2}}(undef, ree)
         for ii in 1:ree
           ZZ[ii] = zeros(Float64, size(Z[ii], 1), 0) # initialisation matrice vide
@@ -283,9 +311,9 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
             ##########################################################
             if copy > 0
               for rr in 1:rep # -->> ? rep = 1 (declared at the beginning)
-                ord = sortbycol([[1:ree]'; rand(1, ree)]', 2)
+                ord = sortbycol([1:ree rand(ree)]', 2)
                 ord = ord[:, 1]'  #Order to resample.  Each re will be resampled.
-                ord = convert(Array{Int,1}, vec(ord))
+                ord = convert(Vector{Int64}, vec(ord))
                 for kk in ord
                   for ii in 1:copy
                     CO = RE[JJ, :]
@@ -295,32 +323,32 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
                     end
                     XX = XX[JJ, :]
                     XX = XX[:, setdiff(1:size(XX, 2), kk)] #remove column of effect to be resampled
-                    temp = RE2[JJ, kk] .!= 0  #find which levels of kk have been sampled
+                    temp = RE2[JJ, kk] .!= 0  # -->> USELESS ? find which levels of kk have been sampled
                     Z1 = Ztemp[kk][unique(RE2[JJ[temp], kk]), ii]  #Z being resampled
-                    CO2 = RE[JJ, [(ESUM[kk]-E[kk]+1):ESUM[kk]]]
-                    level0 = findall(sum(abs(CO2), 1) .== 0) #levels not sampled yet # -->> TO REPLACE WITH count
+                    CO2 = RE[JJ, (ESUM[kk]-E[kk]+1):ESUM[kk]]
+                    level0 = findall(vec(all(CO2 .== 0, dims=1))) # findall(vec(sum(CO2, dims = 1)) .== 0) #levels not sampled yet # -->> TO REPLACE WITH count
                     Z0 = findall(Z1 .== 0.0)  #Z's not sampled
                     Z00 = setdiff(1:length(Z1), Z0) #These are the levels with Z for effect kk
-                    CO2 = CO2[:, setminus(1:size(CO2, 2), level0)]
-                    Z1 = setdiff(Z1, Z0) # -->> was setminus(Z0, Z1) --- maybe use setdiff!
+                    CO2 = CO2[:, setdiff(1:size(CO2, 2), level0)]
+                    Z1 = Z1[Z00]#setdiff(Z1, Z1[Z0]) # -->> was setminus(Z0, Z1) --- maybe use setdiff!
                     if fe > 0
                       XX = hcat(FE[JJ, :], XX)
                     end
                     MAT = hcat(-XX, CO2)
-                    if rank(MAT) < size(MAT, 2)
+                    if rank(MAT) < size(MAT, 2) # -->> looks like it is 1, not 2
                       NUL = nullspace(MAT) #
                       n1 = NUL[1:size(NUL, 1) - size(CO2, 2), :]
                       n2 = NUL[(size(NUL, 1) - size(CO2, 2)+1):end, :]
-                      O2 = qr(n2).Q
+                      O2 = qr(n2).Q[1:size(n2, 1), 1:size(n2, 2)]
                       B = CO2 * O2
                       O1 = XX \ B
                       a = O2' * Z1
                       b = sqrt((Z1 - O2 * a)' * (Z1 - O2 * a))
                       tau = (Z1 - O2 * a) / b
-                      AAA = maximum(size(Z1)) - rank(O2)
-                      bb = rand(Chisq(maximum(size(Z1)) - rank(O2))) # -->> rank O2 is ncol or nrow
+                      #AAA = length(Z1) - rank(O2)
+                      bb = rand(Chisq(length(Z1) - rank(O2))) # -->> rank O2 is ncol or nrow
 #                      bb = sqrt(randchi2(max(size(Z1)) - rank(O2)))
-                      bbb = (b/bb)[1] #
+                      bbb = b/bb #
                       aa = randn(rank(O2), 1) # -->> idem rank O2
                       Ztemp[kk][Z00, ii] = O2 * aa + bb * tau
                       vert = setdiff(1:dim, fe + kk)
@@ -336,7 +364,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
                     else
                       b = sqrt(Z1' * Z1)
                       tau = Z1 / b
-                      bb = rand(Chisq(maximum(size(Z1))))
+                      bb = rand(Chisq(length(Z1)))
                       Ztemp[kk][Z00, ii] = bb * tau
                       vert = setdiff(1:dim, fe + kk)
                       for jj in 1:VC[i]
@@ -348,7 +376,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
               end
             end
             for ii in 1:ree
-              ZZ[ii, 1] = hcat(ZZ[ii, 1], Ztemp[ii, 1])  # ? c'est pareil que ZZ[ii,1]=2temp[ii,1]
+              ZZ[ii] = hcat(ZZ[ii], Ztemp[ii])  # ? c'est pareil que ZZ[ii,1]=2temp[ii,1]
             end
             VCVC[(sum(N_sons[1:(i-1)])+1):sum(N_sons[1:i])] = VCtemp
             d = sum(N_sons[1:(i-1)])
@@ -367,7 +395,6 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
     end  #ends reampling for k=K1
     #----------------------------------------------------determine signs
     signs = zeros(Int64, ree, N)
-
     for i in 1:N
       for j in 1:ree
         positive = VT[i][fe+j, :] .> 0
@@ -380,14 +407,14 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
       end
     end
     #----------------------------------------------------FINAL RESAMPLE
-    ZZ = cell(ree, 1)
-    VTVT = cell(1, N)
+    ZZ = Vector{Array{Float64,2}}(undef, ree)
+    VTVT = Vector{Array{Float64,2}}(undef, N)
     #ZZZZZ = Z -->> not used
     for i in 1:N
       # iiii = i -->> not used
       Ztemp = Vector{Vector{Float64}}(undef, ree)
       VTtemp = VT[i]
-      n1 = sort(hcat(K1, K_start))
+      n1 = sort(vcat(K1, K_start))
       nn = Vector{Vector{Int64}}(undef, ree)
       for ii in 1:ree
         nn[ii] = unique(RE2[n1, ii])
@@ -396,7 +423,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
           ZZ[ii] = zeros(Float64, length(Ztemp[ii]), 0)
         end
       end
-      ord = sortbycol([[1:ree]'; rand(1, ree)]', 2)
+      ord = sortbycol([1:ree rand(ree)]', 2)
       ord = ord[:, 1]'  #Order to resample.  Each re will be resampled.
       ord = convert(Array{Int,2}, ord)
       for kk in ord
@@ -405,28 +432,35 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
         eff = 1:ree
         eff = setdiff(eff, kk)
         for jj in eff
-          XX = hcat(XX, RE[:, (ESUM[jj]-E[jj]+1):(ESUM[jj]-E[jj]+length(nn[jj]))) *
-              Ztemp[jj]]
+          XX = hcat(XX, RE[:, (ESUM[jj]-E[jj]+1):(ESUM[jj]-E[jj]+length(nn[jj]))]) *
+              Ztemp[jj]
         end
         #temp=find(RE2[:,kk].!=0)  #find which levels of kk have been sampled
         Z1 = Ztemp[kk]  #Z being resampled
         CO2 = RE[:, (ESUM[kk]-E[kk]+1):(ESUM[kk]-E[kk]+length(nn[kk]))]  # c'?tait E[:,kk] mais une seule ligne
-        level0 = findall(count(.==(0), CO2, dims=1)) #levels not sampled yet
+        level0 = findall(vec(all(CO2 .== 0, dims=1))) #levels not sampled yet
         Z0 = findall(Z1 .== 0)  #Z's not sampled
         Z00 = setdiff(1:length(Z1), Z0) #These are the levels with Z for effect kk
         CO2 = CO2[:, setdiff(1:size(CO2, 2), level0)]
-        Z1 = setdiff(Z1, Z0)
+        Z1 = Z1[Z00] # -->> same as setdiff(Z1, Z1[Z0])
         if fe > 0
           XX = hcat(FE, XX)
         end
         MAT = hcat(-XX, CO2)
         #MMMAT = MAT
         #COOO2 = CO2
-        if rank(MAT) < size(MAT, 2)
+        if rank(MAT) < size(MAT, 2) # -->> was 2
           NUL = nullspace(MAT) #
           n1 = NUL[1:size(NUL, 1) - size(CO2, 2), :]
           n2 = NUL[(size(NUL, 1) - size(CO2, 2) + 1):end, :]
-          O2 = qr(n2).Q  # rank(O2) = ncol(NUL) ?
+          O2 = qr(n2).Q[1:size(n2, 1), 1:size(n2, 2)]  # rank(O2) = ncol(NUL) ?
+          print("\nn2")
+          print(n2)
+          print("\nO2")
+          print(O2)
+          print("\nrankO2")
+          print(rank(O2))
+          print("\n")
           B = CO2 * O2
           O1 = XX \ B
           a = O2' * Z1
@@ -435,8 +469,8 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
           #OOO2 = O2
           #ZZZ1 = Z1
           #AAAA = max(size(Z1)) - rank(O2)
-          bb = rand(Chisq(maximum(size(Z1)) - rank(O2)))
-          bbb = (b/bb)[1] #
+          bb = rand(Chisq(length(Z1) - rank(O2)))
+          bbb = b/bb #
           aa = randn(rank(O2), 1)
           Ztemp[kk][Z00] = O2 * aa + bb * tau
           vert = setdiff(1:dim, fe + kk)
@@ -448,9 +482,9 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
           b = sqrt(Z1' * Z1)
           tau = Z1 / b
           bb = rand(Chisq(maximum(size(Z1))))
-          bbb = b[1]/bb
+          bbb = b/bb
           Ztemp[kk][Z00] = bb * tau
-          vert = setminus(1:dim, fe + kk)
+          vert = setminus(1:dim, fe + kk) # -->> !! setminus not defined !!
           for jj in 1:VC[i]
             VTtemp[fe+kk, jj] *= bbb
           end
@@ -477,7 +511,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
     VT_end = zeros(Float64, dim, N)
     for i in 1:N
       for j in 1:dim
-        if rand(1) <= 0.5
+        if rand() <= 0.5
           if j <= fe
             VT_end[j, i] = minimum(VT[i][j, :])
           else
@@ -485,6 +519,9 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
           end
         else
           if j <= fe
+            print("\n********************\n")
+            print(VT[i])
+            print("\n")
             VT_end[j, i] = maximum(VT[i][j, :])
           else
             VT_end[j, i] = max(maximum(VT[i][j, :]), 0)
@@ -492,12 +529,16 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
         end
       end
     end
+    println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    println(K_n)
+    println(k_n)
     if k_n == K_n #if finished pick coordinates
+      println("FFFIIINNIIISSSHHHEEEDDD")
       #pick the coordinates
       VT_end = zeros(Float64, dim, N)
       for i in 1:N
         for j = 1:dim
-          if rand(1) <= 0.5
+          if rand() <= 0.5
             if j <= fe
               VT_end[j, i] = minimum(VT[i][j, :])
             else
@@ -520,3 +561,5 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
   end
   return (VERTEX, WEIGHT)
 end
+
+fid_nMLM(data, FE, RE, 2, 1.0)

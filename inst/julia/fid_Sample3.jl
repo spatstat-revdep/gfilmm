@@ -43,14 +43,24 @@ function fid_sample(VT2::Vector{R}, VTsum::Vector{R}, U::R, L::R) where {R<:Real
       MIN = -Inf
       temp = atan(MAX) / pi + 0.5  #weight adjustment
     else
-      HUs = (U .- VTsum[high]) ./ VT2[high]
-      HLs = (L .- VTsum[high]) ./ VT2[high]
-      Hmax = maximum(maximum(HUs), maximum(HLs))
-      Hmin = minimum(minimum(HUs), minimum(HLs))
-      LUs = (U .- VTsum[low]) ./ VT2[low]
-      LLs = (L .- VTsum[low]) ./ VT2[low]
-      Lmax = max(maximum(LUs), maximum(LLs))
-      Lmin = min(minimum(LUs), minimum(LLs))
+      if isempty(high)
+        Hmax = -Inf
+        Hmin = Inf
+      else
+        HUs = (U .- VTsum[high]) ./ VT2[high]
+        HLs = (L .- VTsum[high]) ./ VT2[high]
+        Hmax = max(maximum(HUs), maximum(HLs))
+        Hmin = min(minimum(HUs), minimum(HLs))
+      end
+      if isempty(low)
+        Lmax = -Inf
+        Lmin = Inf
+      else
+        LUs = (U .- VTsum[low]) ./ VT2[low]
+        LLs = (L .- VTsum[low]) ./ VT2[low]
+        Lmax = max(maximum(LUs), maximum(LLs))
+        Lmin = min(minimum(LUs), minimum(LLs))
+      end
       if 0 <= approx(Lmin - Hmax, 12)    ## roundn indisponible
         bottom_pos = -Inf
         top_pos = Hmax
@@ -109,8 +119,8 @@ function fid_sample(VT2::Vector{R}, VTsum::Vector{R}, U::R, L::R) where {R<:Real
   return (ZZ, wt, MIN, MAX)
 end
 
-VT2 = [1.0; 2.0; 3.0; 4.0]
-VTsum = [4.0; 3.0; 2.0; 1.0]
-L = 1.5
-U = 3.5
+VT2 = -[1.0; 2.0; 3.0; 4.0]
+VTsum = -[4.0; 3.0; 2.0; 1.0]
+L = -4.5
+U = -1.5
 fid_sample(VT2, VTsum, U, L)

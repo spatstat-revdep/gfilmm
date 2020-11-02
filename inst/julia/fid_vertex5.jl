@@ -44,11 +44,11 @@ function fid_vertex(
       vert = vert + length(use)
       for dd in use
         inter = CB[findall(INT2[:, dd] .== 1), ii]  #this will be intersection
-        CCtemp = hcat(CCtemp, [inter; k + n])  # ATTENTION A VERIFIER need to add n indicating lower constraint
-        lambda = (Lk - VTsum_wl[ii]) / (VTsum_cl[dd] - VTsum_wl[ii])
+        CCtemp = hcat(CCtemp, [inter; k+n])  # ATTENTION A VERIFIER need to add n indicating lower constraint
+        lambda = (Lk - VTsum[whichl[ii]]) / (VTsum[checkl[dd]] - VTsum[whichl[ii]])
         VTtemp = hcat(
           VTtemp,
-          lambda * VT1_cl[:, dd] + (1.0 - lambda) * VT1_wl[:, ii]
+          lambda * VTi[:, checkl[dd]] + (1.0 - lambda) * VTi[:, whichl[ii]]
         )
       end
     end
@@ -71,10 +71,10 @@ function fid_vertex(
       for dd in use
         inter = CB[findall(INT2[:, dd] .== 1), ii]  #this will be intersection
         CCtemp = hcat(CCtemp, [inter; k])  # ATTENTION A VERIFIER need to add n indicating lower constraint
-        lambda = (Uk - VTsum_wu[ii]) / (VTsum_cu[dd] - VTsum_wu[ii])
+        lambda = (Uk - VTsum[whichu[ii]]) / (VTsum[checku[dd]] - VTsum[whichu[ii]])
         VTtemp = hcat(
           VTtemp,
-          lambda * VT1_cu[:, dd] + (1.0 - lambda) * VT1_wu[:, ii]
+          lambda * VTi[:, checku[dd]] + (1.0 - lambda) * VTi[:, whichu[ii]]
         )
       end
     end

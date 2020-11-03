@@ -22,7 +22,8 @@ Suggests:
     rmarkdown,
     lmerTest,
     emmeans,
-    testthat
+    testthat,
+    AOV1R
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.1.1
 Encoding: UTF-8

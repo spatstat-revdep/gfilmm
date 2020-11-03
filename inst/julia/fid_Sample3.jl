@@ -13,7 +13,7 @@ function fid_sample(VT2::Vector{R}, VTsum::Vector{R}, U::R, L::R) where {R<:Real
     whichnot = findall(VT2 .!= 0)
     which = findall(VT2 .== 0)
     if length(zero) == length(VT2) #all are zero
-      if all(VTsum .>= U) || all(VTsum .<= L) #do not satisfy constaints
+      if !all(VTsum .>= U) && !all(VTsum .<= L) #do not satisfy constaints
         #changed to be strict inequalities 2/24 due to precision of
         #Matlab
         MAX = Inf

@@ -8,6 +8,7 @@ src/*.dll
 inst/essais
 inst/simulations/*.rds
 inst/simulations/*.png
+inst/julia/*.bin
 inst/docs
 inst/doc
 doc

@@ -22,7 +22,7 @@ p code {
   font-weight: bold;
 }
 
-code.sourceCode {
+pre.sourceCode {
   border: 1px solid silver;
 }
 

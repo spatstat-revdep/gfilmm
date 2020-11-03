@@ -153,10 +153,10 @@ function fid_vertex2(
   CB = CC1[:, whichu]
   if !isempty(checku) #i.e. they do not all satisfy the lower constraint
     INT = zeros(2 * n, length(checku))
-    INT[CA[:, 1:length(checku)], 1:length(checku)] .= 1
-#    for ll = 1:length(checku) #check lower constraints first
-#      INT[CA[:, ll], ll] .= 1
-#    end
+    #INT[CA[:, 1:length(checku)], 1:length(checku)] .= 1
+    for ll = 1:length(checku) #check lower constraints first
+      INT[CA[:, ll], ll] .= 1
+    end
     for ii = 1:length(whichu)
       INT2 = INT[CB[:, ii], :]
       use = findall(sum(INT2, dims=1) .== dim - 1)
@@ -200,7 +200,7 @@ dim = 3
 k = 2
 n = 18
 
-fid_vertex(VT1, CC1, VTsum, U, L, m, dim, k, n)
+fid_vertex0(VT1, CC1, VTsum, U, L, m, dim, k, n)
 fid_vertex2(VT1, CC1, VTsum, U, L, m, dim, k, n)
 
 

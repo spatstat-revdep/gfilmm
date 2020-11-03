@@ -1,25 +1,385 @@
 using LinearAlgebra
-using Distributions # to sample chi²
+#using Distributions # to sample chi²
 
-AAA = []
-AAAA = []
-KKK = []
-OOO2 = []
-ZZZ1 = []
-COOO2 = []
-MMMAT = []
-ZZZZZ = []
-iiii = []
-#ZZZZ = cell(16)
-#ESSS = cell(16)
+function rchi(n)
+   return norm(randn(n))
+end
+
+function gramSchmidt(A)
+  (m, n) = size(A)
+  if m < n
+    error("m < n")
+  end
+  Q = zeros(Float64, m, n)
+  R = zeros(Float64, n, n)
+  for k in 1:n
+    Q[:, k] = A[:, k]
+    if k > 1
+      for i in 1:(k - 1)
+        R[i, k] = Q[:, i]' * Q[:, k]
+        Q[:, k] = Q[:, k] - R[i, k] * Q[:, i]
+      end
+    end
+    R[k, k] = norm(Q[:, k])
+    Q[:, k] = Q[:, k]/R[k, k]
+  end
+  return (Q, R)
+end
+
+## similar to the Matlab orth() function
+## -->> faire qr(A).Q
+function orth(A)
+  if (isempty(A))
+    retval = []
+  else
+    (U, S, V) = svd(A)
+    (rows, cols) = size(A)
+    tol = maximum(size(A)) * S[1] * eps()
+    r = sum(S .> tol)
+    if (r > 0)
+      retval = -U[:, 1:r]
+    else
+      retval = zeros(rows, 0)
+    end
+  end
+  return (retval)
+end
+## sort array M with respect to colon j
+sortbycol = function (M, j)
+  local col, perm
+  col = M[:, j]
+  perm = sortperm(col)#[2]
+  return (M[perm, :])
+end
+
+function fid_vertex0(
+  VT1::Array{R},
+  CC1::Array{Int64},
+  VTsum::Vector{R},
+  U::R,
+  L::R,
+  m::Int64,
+  dim::Int64,
+  k::Int64,
+  n::Int64,
+) where {R<:Real}
+  # VT1 : matric 4x16
+  # CC1: idem integer entries
+  # VTsum: colonne 16
+  # U,L : nbm
+  # m,dim,k,n : integers
+  m = length(VTsum) # ?
+  whichVT = zeros(Bool, m, 2)
+  whichVT[:, 1] = VTsum .>= L
+  whichVT[:, 2] = VTsum .<= U
+  whichl = findall(whichVT[:, 1])  #vertices that satisfy lower constraint
+  whichu = findall(whichVT[:, 2])  #vertices that satisfy upper constraint
+  both = findall(all(whichVT, dims=2)[:, 1]) ## -->> findall(all(whichVT, dims=2))
+  ##       -> cartesian index
+  ##      findall(all(whichVT, dims=2)[:,1])
+  checkl = findall(.!whichVT[:, 1])
+  checku = findall(.!whichVT[:, 2])
+  CCtemp = zeros(dim, 0) # ou utiliser peut-?tre cell()
+  VTtemp = zeros(dim, 0)
+  vert = 0
+  CA = CC1[:, checkl]
+  CB = CC1[:, whichl]
+  if !isempty(checkl) #i.e. they do not all satisfy the lower constraint
+    INT = zeros(Int64, 2 * n, length(checkl))
+    for ll = 1:length(checkl) #check lower constraints first
+      INT[CA[:, ll], ll] .= 1
+    end
+    for ii = 1:length(whichl)
+      INT2 = INT[CB[:, ii], :]
+      #print(INT2)
+      use = findall(vec(sum(INT2, dims=1) .== dim - 1)) # sum sur colonne
+      #print(use)
+      for dd = 1:length(use)
+        inter = CB[findall(INT2[:, use[dd]] .== 1), ii]  #this will be intersection
+        #print(inter)
+        vert = vert + 1
+        CCtemp = [CCtemp [inter; k + n]]  # ATTENTION A VERIFIER need to add n indicating lower constraint
+        lambda = (L - VTsum[whichl[ii]]) /
+          (VTsum[checkl[use[dd]]] - VTsum[whichl[ii]])
+        VTtemp =
+          [VTtemp lambda * VT1[:, checkl[use[dd]]] + (1.0 - lambda) * VT1[:, whichl[ii]]] # il faut coller en colonnes
+      end
+    end
+  end
+  CA = CC1[:, checku]
+  CB = CC1[:, whichu]
+  if !isempty(checku) #i.e. they do not all satisfy the lower constraint
+    INT = zeros(2 * n, length(checku))
+    for ll = 1:length(checku) #check lower constraints first
+      INT[CA[:, ll], ll] .= 1
+    end
+    for ii in 1:length(whichu)
+      #print("\nINT2 below\n")
+      INT2 = INT[CB[:, ii], :]
+      use = findall((sum(INT2, dims=1) .== dim - 1)[1, :])
+      #print("\n************use*********:\n")
+      #print(use)
+      #print("\n")
+      #print(CB)
+      for dd in 1:length(use)
+        #print("\naaaaaaa\n")
+        #print(use[dd])
+        #print("\n")
+        #print(findall((INT2[:, use[dd]] .== 1)[:,1]))
+        #print("\nxxx\n")
+        inter = CB[findall((INT2[:, use[dd]] .== 1)[:,1]), ii]
+        #print(inter)  #this will be intersection
+        vert = vert + 1
+        CCtemp = [CCtemp [inter; k]]  #need to add n indicating lower constraint
+        lambda = (U - VTsum[whichu[ii]]) / (VTsum[checku[use[dd]]] - VTsum[whichu[ii]])
+        #print("lambda\n")
+        VTtemp =
+          [VTtemp lambda * VT1[:, checku[use[dd]]] + (1.0 - lambda) * VT1[:, whichu[ii]]]
+        #print("VTtemp\n")
+      end
+    end
+  end
+  if !isempty(both)
+    for ll in both # both' ??
+      vert = vert + 1
+      CCtemp = [CCtemp CC1[:, ll]]
+      VTtemp = [VTtemp VT1[:, ll]]
+    end
+  end
+  bigs = VTtemp .> 5000
+  if any(bigs)
+    println("bigs")
+  end
+  return (VTtemp, CCtemp, vert)
+end
+
+function fid_vertex(
+  VTi::Array{R},
+  CCi::Array{Int64},
+  VTsum::Vector{R},
+  Uk::R,
+  Lk::R,
+  p,
+  dim::Int64,
+  k::Int64,
+  n::Int64,
+) where {R<:Real}
+  p = length(VTsum)
+  lwr = VTsum .>= Lk
+  upr = VTsum .<= Uk
+  whichl = findall(lwr)  #vertices that satisfy lower constraint
+  whichu = findall(upr)  #vertices that satisfy upper constraint
+  both = findall(lwr .& upr)
+  checkl = findall(.!lwr)
+  checku = findall(.!upr)
+  lcheckl = length(checkl)
+  lchecku = length(checku)
+  lwhichl = p - lcheckl
+  lwhichu = p - lchecku
+  #
+  CCtemp = zeros(Int64, dim, 0)
+  VTtemp = zeros(Float64, dim, 0)
+  vert = 0
+  #
+  CA = CCi[:, checkl]
+  CB = CCi[:, whichl]
+  if lcheckl != 0
+    INT = falses(2 * n, lcheckl)
+    #INT[CA, :] .= 1 #check lower constraints first
+    for ll = 1:length(checkl) #check lower constraints first
+      INT[CA[:, ll], ll] .= 1
+    end
+    #
+    VTsum_cl = VTsum[checkl]
+    VT1_cl = VTi[:, checkl]
+    VTsum_wl = VTsum[whichl]
+    VT1_wl = VTi[:, whichl]
+    #
+    for ii in 1:lwhichl
+      INT2 = INT[CB[:, ii], :]
+      use = findall(count(==(1), INT2, dims=1)[1, :] .== dim-1)
+      #print(use)
+      #print("\n")
+      vert = vert + length(use)
+      for dd in use
+        inter = CB[findall(INT2[:, dd] .== 1), ii]  #this will be intersection
+        CCtemp = hcat(CCtemp, [inter; k+n])  # ATTENTION A VERIFIER need to add n indicating lower constraint
+        lambda = (Lk - VTsum[whichl[ii]]) / (VTsum[checkl[dd]] - VTsum[whichl[ii]])
+        VTtemp = hcat(
+          VTtemp,
+          lambda * VTi[:, checkl[dd]] + (1.0 - lambda) * VTi[:, whichl[ii]]
+        )
+      end
+    end
+  end
+  CA = CCi[:, checku]
+  CB = CCi[:, whichu]
+  if lchecku != 0
+    INT = falses(2 * n, lchecku)
+#    INT[CA, :] .= 1 #check upper constraints
+    for ll = 1:length(checku) #check lower constraints first
+      INT[CA[:, ll], ll] .= 1
+    end
+    #
+    VTsum_cu = VTsum[checku]
+    VT1_cu = VTi[:, checku]
+    VTsum_wu = VTsum[whichu]
+    VT1_wu = VTi[:, whichu]
+    #
+    for ii in 1:lwhichu
+      INT2 = INT[CB[:, ii], :]
+      use = findall(count(==(1), INT2, dims=1)[1, :] .== dim-1)
+      vert = vert + length(use)
+      for dd in use
+        inter = CB[findall(INT2[:, dd] .== 1), ii]  #this will be intersection
+        CCtemp = hcat(CCtemp, [inter; k])  # ATTENTION A VERIFIER need to add n indicating lower constraint
+        lambda = (Uk - VTsum[whichu[ii]]) / (VTsum[checku[dd]] - VTsum[whichu[ii]])
+        VTtemp = hcat(
+          VTtemp,
+          lambda * VTi[:, checku[dd]] + (1.0 - lambda) * VTi[:, whichu[ii]]
+        )
+      end
+    end
+  end
+  if !isempty(both)
+    CCtemp = hcat(CCtemp, CCi[:, both])
+    VTtemp = hcat(VTtemp, VTi[:, both])
+    vert = vert + length(both)
+  end
+  bigs = VTtemp .> 5000
+  if any(bigs)
+    println("bigs")
+  end
+  return (VTtemp, CCtemp, vert)
+end
+
+function approx(x::R, n::Int64) where {R<:Real}
+  return round(x * 10^n) / 10^n
+end
+
+function fid_sample(VT2::Vector{R}, VTsum::Vector{R}, U::R, L::R) where {R<:Real}
+  high = findall(VT2 .> 0.0)
+  low = findall(VT2 .< 0.0)
+  zero = findall(VT2 .== 0.0)
+  if (!isempty(low) && !isempty(high)) || !isempty(zero) #some positive and negative sigs
+    UU = map(sign, U .- VTsum)
+    LL = map(sign, L .- VTsum)
+    SS = map(sign, VT2)
+    whichnot = findall(VT2 .!= 0)
+    which = findall(VT2 .== 0)
+    if length(zero) == length(VT2) #all are zero
+      MAX = Inf
+      MIN = -Inf
+      temp = any(UU .== 1) * any(LL .== -1)
+      # if !all(VTsum .>= U) && !all(VTsum .<= L) #do not satisfy constaints
+      #   #changed to be strict inequalities 2/24 due to precision of
+      #   #Matlab
+      #   MAX = Inf
+      #   MIN = -Inf
+      #   temp = 0  #let Z's be anything, but give weight = 0
+      # else #satisfy constraints...Z can be anything
+      #   MAX = Inf
+      #   MIN = -Inf
+      #   temp = 1
+      # end
+    elseif (
+      !any(SS .== -1) && !any(UU[which] .== -1) && !any(LL[which] .== -1)
+    ) || (!any(SS .== 1) && !any(UU[which] .== 1) && !any(LL[which] .== 1))
+      Us = (U .- VTsum[whichnot]) ./ VT2[whichnot]
+      Ls = (L .- VTsum[whichnot]) ./ VT2[whichnot]
+      MAX = Inf
+      MIN = min(minimum(Us), minimum(Ls))
+      temp = 1 - (atan(MIN) / pi + 0.5)  #weight adjustment
+    elseif (
+      !any(SS .== 1) && !any(UU[which] .== -1) && !any(LL[which] .== -1)
+    ) || (
+      !any(SS .== -1) && !any(UU[which] .== 1) && !any(LL[which] .== 1)
+    )
+      Us = (U .- VTsum[whichnot]) ./ VT2[whichnot]
+      Ls = (L .- VTsum[whichnot]) ./ VT2[whichnot]
+      MAX = max(maximum(Us), maximum(Ls))
+      MIN = -Inf
+      temp = atan(MAX) / pi + 0.5  #weight adjustment
+    else
+      if isempty(high)
+        Hmax = -Inf
+        Hmin = Inf
+      else
+        HUs = (U .- VTsum[high]) ./ VT2[high]
+        HLs = (L .- VTsum[high]) ./ VT2[high]
+        Hmax = max(maximum(HUs), maximum(HLs))
+        Hmin = min(minimum(HUs), minimum(HLs))
+      end
+      if isempty(low)
+        Lmax = -Inf
+        Lmin = Inf
+      else
+        LUs = (U .- VTsum[low]) ./ VT2[low]
+        LLs = (L .- VTsum[low]) ./ VT2[low]
+        Lmax = max(maximum(LUs), maximum(LLs))
+        Lmin = min(minimum(LUs), minimum(LLs))
+      end
+      if 0 <= approx(Lmin - Hmax, 6)    ## roundn indisponible
+        bottom_pos = -Inf
+        top_pos = Hmax
+        bottom_neg = Lmin
+        top_neg = Inf
+      elseif approx(Hmin - Lmax, 6) >= 0
+        bottom_pos = Hmin
+        top_pos = Inf
+        bottom_neg = -Inf
+        top_neg = Lmax
+      else
+        bottom_pos = -Inf
+        top_pos = Inf
+        bottom_neg = -Inf
+        top_neg = Inf
+      end
+      #######################################################################
+      if top_pos == Inf
+        Pprob = 1.0 - (atan(bottom_pos) / pi + 0.5)
+      elseif bottom_pos == -Inf
+        Pprob = atan(top_pos) / pi + 0.5
+      end
+      if top_neg == Inf
+        Nprob = 1.0 - (atan(bottom_neg) / pi + 0.5)
+      elseif bottom_neg == -Inf
+        Nprob = atan(top_neg) / pi + 0.5
+      end
+      temp = Pprob + Nprob
+      Pprob = Pprob / temp
+      Nprob = Nprob / temp
+      if rand() <= Nprob #choose negative range
+        MIN = bottom_neg
+        MAX = top_neg
+      else #choose positive range
+        MIN = bottom_pos
+        MAX = top_pos
+      end
+    end
+    #######################################################################
+    y = atan(MAX) / pi + 0.5  #cdf
+    x = atan(MIN) / pi + 0.5
+    u = x + (y - x) * rand()
+    ZZ = tan(pi * (u - 0.5))  #Inverse cdf
+    wt = exp(-ZZ^2 / 2.0) * (1.0 + ZZ^2) * temp
+  else
+    Us = (U .- VTsum) ./ VT2
+    Ls = (L .- VTsum) ./ VT2
+    MAX = max(maximum(Us), maximum(Ls))
+    MIN = min(minimum(Us), minimum(Ls))
+    y = atan(MAX) / pi + 0.5 #cdf
+    x = atan(MIN) / pi + 0.5
+    u = x + (y - x) * rand()
+    ZZ = tan(pi * (u - 0.5)) #Inverse cdf
+    wt = exp(-ZZ^2 / 2.0) * (1.0 + ZZ^2) * (y - x)
+  end
+  return (ZZ, wt, MIN, MAX)
+end
+
+
 #srand(421)
-
-data = [2.0 3; 2 3; 3 4; 4 5; 4 5; 6 7]
-FE = hcat([1.0; 1; 1; 1; 1; 1])
-RE = hcat([1; 1; 2; 2; 3; 3])
-N = 4
-
-fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::Int64, thresh::R) where {R<:Real}
+gfilmm3 = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::Int64, thresh::R) where {R<:Real}
   #global AAA, AAAA, KKK, OOO2, COOO2, ZZZ1, MMMAT, ESSS, ZZZZZ, iiii, ZZZZ
   #VERTEX = []
   #WEIGHT = []
@@ -182,11 +542,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
   K_temp[K_n] = K[((K_n-1)*break_point+1):end]
 
   K1 = Vector{Int64}(undef, 0)
-  println("§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§")
-  print(K_n)
   for k_n in 1:K_n
-    println("§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§")
-    print(k_n)
     K1 = vcat(K1, K_temp[k_n])
     for k in K_temp[k_n]
       effect = ree  #only have the error term left
@@ -200,9 +556,6 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
         #m = convert(Int, VC[1, i])
         m = VC[i]
         VT1 = VT[i]  #vertex values
-        print("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n")
-        print(VT1)
-        print("\n")
         VT2 = VT1[fe+effect, :]  #value to be resampled
         # remove value to be resampled
         keepcols = setdiff(1:size(VT1, 1), fe + effect)
@@ -221,15 +574,6 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
         end
         Z1 = Z1[keepcols]   #remove column of effect to be sampled
         VTsum = (Z1' * VT1)'
-        # print("k: ")
-        # print(k)
-        print("\n")
-        print("VT2: ")
-        print(VT2)
-        print("\n")
-        print("VTsum: ")
-        print(VTsum)
-        print("\n")
         (ZZ, wt) = fid_sample(VT2, VTsum, U[k], L[k]) ###Sample -
         if wt == 0.0
         #  error("wt 0")
@@ -246,16 +590,22 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
         (VT[i], CC[i], VC[i]) = fid_vertex(VT1, CC1, VTsum, U[k], L[k], m, dim, k, n) # -->> I removed the 'm'
         VTtemp = VT[i]
         VCtemp = VC[i]
+        (vt, cc, vc) = fid_vertex0(VT1, CC1, VTsum, U[k], L[k], m, dim, k, n)
+        if !(cc == CC[i])
+          println(cc)
+          println(CC[i])
+          error("uuu")
+        end
         if VC[i] == 0 #check
           print("\nVC[i] zero\n")
-          println(CC)
-          println(VT1)
-          println(CC1)
-          println(VTsum)
-          println([U[k] L[k]])
-          println(i)
-          println(wt)
-          error("STOP")
+          # println(CC)
+          # println(VT1)
+          # println(CC1)
+          # println(VTsum)
+          # println([U[k] L[k]])
+          # println(i)
+          # println(wt)
+          #error("STOP")
           weight[effect][k, i] = 0
         end
       end
@@ -275,7 +625,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
       ESS[k] = 1 / (WT' * WT)
       # ESSS[k] = ESS[k, 1] -->> notused
       #---------------------------------------------------------------Resample
-      if ESS[k] < thresh && k < K[end] #- 1 # -->> pourquoi -1 ?
+      if ESS[k] < thresh && k < K[end]-1 #- 1 # -->> pourquoi -1 ?
         u = zeros(Float64, N)
         N_sons = zeros(Int64, N)
         # generate the cumulative distribution
@@ -332,6 +682,8 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
                     Z1 = Ztemp[kk][unique(RE2[JJ[temp], kk]), ii]  #Z being resampled
                     CO2 = RE[JJ, (ESUM[kk]-E[kk]+1):ESUM[kk]]
                     level0 = findall(vec(all(CO2 .== 0, dims=1))) # findall(vec(sum(CO2, dims = 1)) .== 0) #levels not sampled yet # -->> TO REPLACE WITH count
+                    #println(level0)
+                    #print(CO2)
                     Z0 = findall(Z1 .== 0.0)  #Z's not sampled
                     Z00 = setdiff(1:length(Z1), Z0) #These are the levels with Z for effect kk
                     CO2 = CO2[:, setdiff(1:size(CO2, 2), level0)]
@@ -341,18 +693,19 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
                     end
                     MAT = hcat(-XX, CO2)
                     if rank(MAT) < size(MAT, 2) # -->> looks like it is 1, not 2
-                      NUL = nullspace(MAT')' #
+                      NUL = nullspace(MAT) #
                       n1 = NUL[1:size(NUL, 1) - size(CO2, 2), :]
                       n2 = NUL[(size(NUL, 1) - size(CO2, 2)+1):end, :]
                       #O2 = qr(n2).Q[1:size(n2, 1), 1:size(n2, 2)]
-                      O2 = orth(n2)
-                      B = CO2 * O2
-                      O1 = XX \ B
+                      qrf = qr(n2)
+                      O2 = qrf.Q[:, 1:size(n2,2)]
+                      RR = qrf.R
+                      O1 = n1 * inv(RR)
                       a = O2' * Z1
                       b = sqrt((Z1 - O2 * a)' * (Z1 - O2 * a))
                       tau = (Z1 - O2 * a) / b
                       #AAA = length(Z1) - rank(O2)
-                      bb = rand(Chisq(length(Z1) - rank(O2))) # -->> rank O2 is ncol or nrow
+                      bb = rchi(length(Z1) - rank(O2)) # -->> rank O2 is ncol or nrow
                       #                      bb = sqrt(randchi2(max(size(Z1)) - rank(O2)))
                       bbb = b/bb #
                       aa = randn(rank(O2), 1) # -->> idem rank O2
@@ -370,12 +723,16 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
                     else
                       b = sqrt(Z1' * Z1)
                       tau = Z1 / b
-                      bb = rand(Chisq(length(Z1)))
+                      bb = rchi(length(Z1))
                       Ztemp[kk][Z00, ii] = bb * tau
                       vert = setdiff(1:dim, fe + kk)
                       for jj in 1:VC[i]
                         VTtemp[ii][fe+kk, jj] *= b / bb
                       end
+                    end
+                    bigs = VTtemp[ii] .> 5000
+                    if any(bigs)
+                      println("bbigs")
                     end
                   end
                 end
@@ -451,6 +808,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
         Z1 = Ztemp[kk]  #Z being resampled
         CO2 = RE[:, (ESUM[kk]-E[kk]+1):(ESUM[kk]-E[kk]+length(nn[kk]))]  # c'?tait E[:,kk] mais une seule ligne
         level0 = findall(vec(all(CO2 .== 0, dims=1))) #levels not sampled yet
+        #println(level0) # ALWAYS EMPTY
         Z0 = findall(Z1 .== 0)  #Z's not sampled
         Z00 = setdiff(1:length(Z1), Z0) #These are the levels with Z for effect kk
         CO2 = CO2[:, setdiff(1:size(CO2, 2), level0)]
@@ -465,24 +823,17 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
           NUL = nullspace(MAT) #
           n1 = NUL[1:(size(NUL, 1) - size(CO2, 2)), :]
           n2 = NUL[(size(NUL, 1) - size(CO2, 2) + 1):end, :]
-          print("\nn2")
-          O2 = orth(n2)
-#          O2 = qr(n2).Q[1:size(n2, 1), 1:size(n2, 2)]  # rank(O2) = ncol(NUL) ?
-          print(n2)
-          print("\nO2")
-          print(O2)
-          print("\nrankO2")
-          print(rank(O2))
-          print("\n")
-          B = CO2 * O2
-          O1 = XX \ B
+          qrf = qr(n2)
+          O2 = qrf.Q[:, 1:size(n2,2)]
+          RR = qrf.R
+          O1 = n1 * inv(RR)
           a = O2' * Z1
           b = sqrt((Z1 - O2 * a)' * (Z1 - O2 * a))
           tau = (Z1 - O2 * a) / b
           #OOO2 = O2
           #ZZZ1 = Z1
           #AAAA = max(size(Z1)) - rank(O2)
-          bb = rand(Chisq(length(Z1) - rank(O2)))
+          bb = rchi(length(Z1) - rank(O2))
           bbb = b/bb #
           aa = randn(rank(O2), 1)
           Ztemp[kk][Z00] = O2 * aa + bb * tau
@@ -494,13 +845,17 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
         else
           b = sqrt(Z1' * Z1)
           tau = Z1 / b
-          bb = rand(Chisq(maximum(size(Z1))))
+          bb = rand(Chi(maximum(size(Z1))))
           bbb = b/bb
           Ztemp[kk][Z00] = bb * tau
           vert = setminus(1:dim, fe + kk) # -->> !! setminus not defined !!
           for jj in 1:VC[i]
             VTtemp[fe+kk, jj] *= bbb
           end
+        end
+        bigs = VTtemp .> 5000
+        if any(bigs)
+          println("bbbigs")
         end
       end
       for ii in 1:ree
@@ -532,9 +887,6 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
           end
         else
           if j <= fe
-            print("\n********************\n")
-            print(VT[i])
-            print("\n")
             VT_end[j, i] = maximum(VT[i][j, :])
           else
             VT_end[j, i] = max(maximum(VT[i][j, :]), 0)
@@ -542,11 +894,7 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
         end
       end
     end
-    println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    println(K_n)
-    println(k_n)
     if k_n == K_n #if finished pick coordinates
-      println("FFFIIINNIIISSSHHHEEEDDD")
       #pick the coordinates
       VT_end = zeros(Float64, dim, N)
       for i in 1:N
@@ -576,4 +924,26 @@ fid_nMLM = function (data::Array{R,2}, FE::Array{R,2}, RE::Array{Int64,2}, N::In
 end
 
 
-fid_nMLM(data, FE, RE, 10, 1.0)
+
+
+
+data = [2.0 3; 2 3; 3 4; 4 5; 4 5; 6 7]
+FE = hcat([1.0; 1; 1; 1; 1; 1])
+RE = hcat([1; 1; 2; 2; 3; 3])
+N = 4
+
+(VERTEX, WEIGHT) = gfilmm3(data, FE, RE, 10000, 2500.0)
+
+reverse(sort(VERTEX[1,:]))[1:10]
+
+fname = "/home/stla/Work/R/gfilmm/inst/julia/weight.bin"; # random temporary filename
+open(fname,"w") do f
+  # Make sure we write 64bit integer in little-endian byte order
+  write(f,WEIGHT)
+end
+
+fname = "/home/stla/Work/R/gfilmm/inst/julia/vertex.bin"; # random temporary filename
+open(fname,"w") do f
+  # Make sure we write 64bit integer in little-endian byte order
+  write(f,VERTEX)
+end

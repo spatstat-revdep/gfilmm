@@ -8,6 +8,7 @@
 ^inst/docs$
 ^inst/predictive$
 ^inst/julia$
+^inst/benchmarks$
 ^inst/TODO\.txt$
 ^doc$
 ^Meta$

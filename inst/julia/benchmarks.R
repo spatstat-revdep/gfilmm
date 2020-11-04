@@ -13,8 +13,8 @@ dat <- data.frame(
 )
 
 microbenchmark(
-  R = gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = 30000),
-  Julia = juliaEval("f(30000)"),
+  R = gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = 10000),
+  Julia = juliaEval("f(10000)"),
   times = 2
 )
 

@@ -9,6 +9,8 @@
 #' @param data the data, a dataframe
 #' @param N desired number of simulations
 #' @param thresh threshold, default \code{N/2}; for experts only
+#' @param long logical, whether to use long doubles instead of doubles in the 
+#'   algorithm
 #' @param x a \code{gfilmm} object
 #' @param ... ignored
 #'
@@ -34,7 +36,7 @@
 #' library(kde1d)
 #' kfit <- kde1d(gfi$VERTEX[["(Intercept)"]], weights = gfi$WEIGHT)
 #' curve(dkde1d(x, kfit), from = 45, to = 65)
-gfilmm <- function(y, fixed, random, data, N, thresh=N/2){
+gfilmm <- function(y, fixed, random, data, N, thresh=N/2, long=FALSE){
   data <- droplevels(data)
   Y <- f_eval_rhs(y, data = data)
   if(!is.matrix(Y) || ncol(Y) != 2L){
@@ -68,7 +70,11 @@ gfilmm <- function(y, fixed, random, data, N, thresh=N/2){
   Z <- getZ(RE2) 
   E <- vapply(RE2, nlevels, integer(1L))
   RE2 <- vapply(RE2, as.integer, integer(n)) - 1L
-  gfi <- gfilmm_(yl, yu, FE, Z, RE2, E, N, thresh)
+  gfi <- if(long){
+    gfilmm_long(yl, yu, FE, Z, RE2, E, N, thresh)
+  }else{
+    gfilmm_double(yl, yu, FE, Z, RE2, E, N, thresh)
+  }
   rownames(gfi[["VERTEX"]]) <-
     c(colnames(FE), paste0("sigma_", c(tlabs, "error")))
   gfi[["VERTEX"]] <- as.data.frame(t(gfi[["VERTEX"]]))

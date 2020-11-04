@@ -5,7 +5,7 @@
 \alias{print.gfilmm}
 \title{Generalized fiducial inference}
 \usage{
-gfilmm(y, fixed, random, data, N, thresh = N/2)
+gfilmm(y, fixed, random, data, N, thresh = N/2, long = FALSE)
 
 \method{print}{gfilmm}(x, ...)
 }
@@ -23,6 +23,9 @@ for no random effect}
 \item{N}{desired number of simulations}
 
 \item{thresh}{threshold, default \code{N/2}; for experts only}
+
+\item{long}{logical, whether to use long doubles instead of doubles in the 
+algorithm}
 
 \item{x}{a \code{gfilmm} object}
 

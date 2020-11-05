@@ -1,5 +1,4 @@
-// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil;
-// -*-
+// -*- mode: C++; c-indent-level: 2; c-basic-offset: 2; indent-tabs-mode: nil; -*-
 
 // we only include RcppEigen.h which pulls Rcpp.h in for us
 #include <RcppEigen.h>
@@ -771,6 +770,9 @@ GFI gfilmm_(const Eigen::Matrix<Real, Eigen::Dynamic, 1>& L,
         VC[i] = vert;
         CC[i] = CCtemp;
         VT[i] = VTtemp;
+        if(vert == 0) {
+          weight(k, i) = 0;
+        }
       }
 
       Eigen::Matrix<Real, Eigen::Dynamic, 1> WT(N);
@@ -778,23 +780,29 @@ GFI gfilmm_(const Eigen::Matrix<Real, Eigen::Dynamic, 1>& L,
         WT(j) = weight.col(j).prod();
       }
       const Real WTsum = WT.sum();
+      if(WTsum == 0) {
+        Rcpp::Rcout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+        Rcpp::Rcout << "!!!   Error: possible underflow. !!!\n";
+        Rcpp::Rcout << "!!!   Potential resolutions:     !!!\n";
+        Rcpp::Rcout << "!!!   1.  Widen data intervals   !!!\n";
+        Rcpp::Rcout << "!!!   2.  Center data            !!!\n";
+        Rcpp::Rcout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+        throw Rcpp::exception("Something bad occured.");
+      }
       WTnorm = WT / WTsum;
       ESS(k) = (double)(1 / (WTnorm.dot(WTnorm)));
 
       if(ESS(k) < thresh && k < K[n - Dim - 1]) {
         std::vector<size_t> N_sons(N, 0);
-        const std::vector<Real> dist = Vcumsum<Real>(WTnorm);
+        const std::vector<Real> dist = Vcumsum<Real>(N * WTnorm);
         const double aux = runif(generator);
-        std::vector<double> u(N);
-        for(size_t i = 0; i < N; i++) {
-          u[i] = (aux + (double)i) / (double)N;
-        }
         size_t j = 0;
         for(size_t i = 0; i < N; i++) {
-          while(u[i] > dist[j]) {
-            j = j + 1;
+          const double u = aux + i;
+          while(u > dist[j]) {
+            j += 1;
           }
-          N_sons[j] = N_sons[j] + 1;
+          N_sons[j] += 1;
         }
         std::vector<int> zero2k_ = zero2n<int>(k + 1);
         const Eigen::VectorXi zero2k =

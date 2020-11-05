@@ -105,7 +105,7 @@ saveRDS(results, "~/Work/R/gfilmm/inst/simulations/simulations05.rds")
 stop("X")
 
 ################################################################################
-results <- readRDS("~/Work/R/gfilmm/inst/simulations/simulations05.rds")
+results <- readRDS("~/Work/R/gfilmm/inst/simulations/simulations05_6x3.rds")
 
 cvrg_twoSided <- c(
   sum(results$grandMean[,1] <= mu & mu <= results$grandMean[,2]),
@@ -152,6 +152,25 @@ fcvrg_rightSided <- c(
   sum(results$fsigmaTotal[,1] <= sigmaTotal)
 ) / nsims
 
+fid <- cbind(
+ "two-sided" = cvrg_twoSided,
+ "left-sided" = cvrg_leftSided,
+ "right-sided" = cvrg_rightSided
+)
+dimnames(fid) <- list(
+  Parameter = c("grandMean", "within", "between", "total", "CV"),
+  Interval = colnames(fid)
+)
+
+freq <- cbind(
+  "two-sided" = fcvrg_twoSided[-4],
+  "left-sided" = fcvrg_leftSided[-4],
+  "right-sided" = fcvrg_rightSided[-4]
+)
+dimnames(freq) <- list(
+  Parameter = c("grandMean", "within", "between"),
+  Interval = colnames(freq)
+)
 
 pcvrg_twoSided <- c(
   sum(results$pgrandMean[,1] <= mu & mu <= results$pgrandMean[,2]),
@@ -177,6 +196,81 @@ pcvrg_rightSided <- c(
 ############################################################################
 library(rAmCharts4)
 
+library(rAmCharts4)
+
+dat <- data.frame(
+  x = 1:nsims,
+  x1 = results$grandMean[,1],
+  x2 = results$grandMean[,2],
+  y1 = results$fgrandMean[,1],
+  y2 = results$fgrandMean[,2]
+)
+ttl <- "grand mean"
+
+dat <- data.frame(
+  x = 1:nsims,
+  x1 = results$sigmaWithin[,1],
+  x2 = results$sigmaWithin[,2],
+  y1 = results$fsigmaWithin[,1],
+  y2 = results$fsigmaWithin[,2]
+)
+ttl <- "within standard deviation"
+
+dat <- data.frame(
+  x = 1:nsims,
+  x1 = results$sigmaBetween[,1],
+  x2 = results$sigmaBetween[,2],
+  y1 = results$fsigmaBetween[,1],
+  y2 = results$fsigmaBetween[,2]
+)
+ttl <- "between standard deviation"
+
+amDumbbellChart(
+  width = NULL,
+  data = dat[1:15,],
+  draggable = FALSE,
+  category = "x",
+  values = rbind(c("x1","x2"), c("y1","y2")),
+  seriesNames = c("Fiducial", "Frequentist"),
+  chartTitle = amText(
+    paste0("Confidence intervals about the ", ttl),
+    fontSize = 17, fontWeight = "bold", fontFamily = "Trebuchet MS"
+  ),
+  #  yLimits = c(-10, 200),
+  segmentsStyle = list(
+    "Fiducial" = amSegment(width = 2, color = "red"),
+    "Frequentist" = amSegment(width = 2, color = "blue")
+  ),
+  bullets = list(
+    x1 = amTriangle(strokeWidth = 0, color = "red"),
+    x2 = amTriangle(rotation = 180, strokeWidth = 0, color = "red"),
+    y1 = amTriangle(strokeWidth = 0, color = "blue"),
+    y2 = amTriangle(rotation = 180, strokeWidth = 0, color = "blue")
+  ),
+  tooltip = amTooltip("upper: {openValueY}\nlower: {valueY}", scale = 0.75),
+  xAxis = list(
+    title = amText(
+      "simulation",
+      fontSize = 17, fontWeight = "bold", fontFamily = "Helvetica"
+    ),
+    labels = amAxisLabels(fontSize = 12)
+  ),
+  yAxis = list(
+    title = amText(
+      "interval",
+      fontSize = 17, fontWeight = "bold", fontFamily = "Helvetica"
+    ),
+    gridLines = amLine("silver", width = 1, opacity = 0.4)
+  ),
+  legend = amLegend(position = "right", itemsWidth = 15, itemsHeight = 15),
+  backgroundColor = "lightyellow",
+  theme = "dataviz",
+  caption = "6x3 design",
+  export = TRUE
+)
+
+
+################################################################################
 dat <- data.frame(
   x = 1:nsims,
   x1 = results$grandMean[,1],

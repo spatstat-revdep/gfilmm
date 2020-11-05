@@ -16,6 +16,11 @@ function sampleInt(n)
   return convert(Vector{Int64}, sortbycol(hcat(1:n, rand(n)), 2)[:,1])
 end
 
+function ff(cdd, VTsum, x, vtsumw, VTi, vtiw)
+  lambda = (x - vtsumw) / (VTsum[cdd] - vtsumw)
+  return lambda * VTi[:, cdd] + (1.0 - lambda) * vtiw
+end
+
 function fid_vertex(
   VTi::Array{R},
   CCi::Array{Int64},
@@ -57,15 +62,12 @@ function fid_vertex(
     for ii in 1:lwhichl
       @inbounds INT2 = INT[CB[:, ii], :]
       @inbounds use = findall(count(==(1), INT2, dims=1)[1, :] .== dim-1)
-      vert = vert + length(use)
-      for dd in use
-        @inbounds inter = CB[findall(INT2[:, dd] .== 1), ii]  #this will be intersection
-        CCtemp = hcat(CCtemp, [inter; k+n])
-        @inbounds lambda = (Lk - VTsum_wl[ii]) / (VTsum[checkl[dd]] - VTsum_wl[ii])
-        @inbounds VTtemp = hcat(
-          VTtemp,
-          lambda * VTi[:, checkl[dd]] + (1.0 - lambda) * VTi_wl[:, ii]
-        )
+      if length(use) > 0
+        vert = vert + length(use)
+        @inbounds inters = map(dd -> [CB[findall(INT2[:, dd] .== 1), ii]; k+n], use)
+        CCtemp = hcat(CCtemp, hcat(inters...))
+        @inbounds VTs = map(c -> ff(c, VTsum, Lk, VTsum_wl[ii], VTi, VTi_wl[:, ii]), checkl[use])
+        VTtemp = hcat(VTtemp, hcat(VTs...))
       end
     end
   end
@@ -84,15 +86,12 @@ function fid_vertex(
     for ii in 1:lwhichu
       @inbounds INT2 = INT[CB[:, ii], :]
       @inbounds use = findall(count(==(1), INT2, dims=1)[1, :] .== dim-1)
-      vert = vert + length(use)
-      for dd in use
-        @inbounds inter = CB[findall(INT2[:, dd] .== 1), ii]  #this will be intersection
-        CCtemp = hcat(CCtemp, [inter; k])
-        @inbounds lambda = (Uk - VTsum_wu[ii]) / (VTsum[checku[dd]] - VTsum_wu[ii])
-        @inbounds VTtemp = hcat(
-          VTtemp,
-          lambda * VTi[:, checku[dd]] + (1.0 - lambda) * VTi_wu[:, ii]
-        )
+      if length(use) > 0
+        vert = vert + length(use)
+        @inbounds inters = map(dd -> [CB[findall(INT2[:, dd] .== 1), ii]; k], use)
+        CCtemp = hcat(CCtemp, hcat(inters...))
+        @inbounds VTs = map(c -> ff(c, VTsum, Uk, VTsum_wu[ii], VTi, VTi_wu[:, ii]), checku[use])
+        VTtemp = hcat(VTtemp, hcat(VTs...))
       end
     end
   end
@@ -287,8 +286,12 @@ function gfilmm4(data::Array{R,2}, FE::Array{Float64,2}, RE::Array{Int64,2}, N::
 
   for i in 1:ree  #Sample all the Z's
     Z[i] = randn(E[i], N)
+    REblock = RE[:, (ESUM[i]-E[i]+1):ESUM[i]]
+    # As = map(j -> REblock * Z[i][:, j], 1:N)
+    # println(As)
+    # A = hcat(As...)
     for j in 1:N
-      A[j] = hcat(A[j], RE[:, (ESUM[i]-E[i]+1):ESUM[i]] * Z[i][:, j])
+      A[j] = hcat(A[j], REblock * Z[i][:, j])
     end
   end
 
@@ -474,10 +477,10 @@ function gfilmm4(data::Array{R,2}, FE::Array{Float64,2}, RE::Array{Int64,2}, N::
                       NUL = nullspace(MAT) #
                       @inbounds n1 = NUL[1:size(NUL, 1) - size(CO2, 2), :]
                       @inbounds n2 = NUL[(size(NUL, 1) - size(CO2, 2)+1):end, :]
-                      qrf = qr(n2)
+                      qrf = qr!(n2)
                       @inbounds O2 = qrf.Q[:, 1:size(n2,2)]
                       RR = qrf.R
-                      O1 = n1 * inv(RR)
+                      O1 = n1 * inv(UpperTriangular(RR))
                       a = O2' * Z1
                       b = sqrt((Z1 - O2 * a)' * (Z1 - O2 * a))
                       tau = (Z1 - O2 * a) / b
@@ -578,10 +581,10 @@ function gfilmm4(data::Array{R,2}, FE::Array{Float64,2}, RE::Array{Int64,2}, N::
           NUL = nullspace(MAT)
           @inbounds n1 = NUL[1:(size(NUL, 1) - size(CO2, 2)), :]
           @inbounds n2 = NUL[(size(NUL, 1) - size(CO2, 2) + 1):end, :]
-          qrf = qr(n2)
+          qrf = qr!(n2)
           @inbounds O2 = qrf.Q[:, 1:size(n2, 2)]
           RR = qrf.R
-          O1 = n1 * inv(RR)
+          O1 = n1 * inv(UpperTriangular(RR))
           a = O2' * Z1
           b = sqrt((Z1 - O2 * a)' * (Z1 - O2 * a))
           tau = (Z1 - O2 * a) / b
@@ -664,3 +667,25 @@ function f(N)
   (VERTEX, WEIGHT, ESS) = gfilmm4(data, FE, RE, N, convert(Float64, N/2))
   return VERTEX
 end
+
+
+# function test1()
+#   M0 = ones(10, 10)
+#   M = ones(10,0)
+#   for i in 1:100
+#     M = hcat(M,M0)
+#   end
+#   return M
+# end
+#
+# function test2()
+#   M = ones(10, 10)
+#   Ms = map(i -> M, 1:100)
+#   out = hcat(Ms...)
+#   return out
+# end
+#
+# using BenchmarkTools
+#
+# @btime test1()
+# @btime test2()

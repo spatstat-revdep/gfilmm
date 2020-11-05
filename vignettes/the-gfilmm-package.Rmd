@@ -191,3 +191,65 @@ gfiConfInt(~ sqrt(sigma_group^2 + sigma_error^2)/`(Intercept)`, fidSims)
 ```
 
 
+## A small simulation study
+
+### 3x2 design
+
+frequentist:
+
+```
+           Interval
+Parameter   two-sided left-sided right-sided
+  grandMean   0.95250    0.97800      0.9745
+  within      0.94600    0.97550      0.9705
+  between     0.94575    0.96975      0.9760
+```
+
+fiducial:
+
+```
+           Interval
+Parameter   two-sided left-sided right-sided
+  grandMean   0.99450    0.99750     0.99700
+  within      0.95800    0.97950     0.97850
+  between     0.99425    0.99975     0.99450
+  total       0.96850    0.99925     0.96925
+  CV          0.96850    0.99925     0.96925
+```
+
+![](intervals_grandMean_3x2.png)
+
+![](intervals_within_3x2.png)
+
+![](intervals_between_3x2.png)
+
+
+### 6x3 design
+
+frequentist:
+
+```
+           Interval
+Parameter   two-sided left-sided right-sided
+  grandMean    0.9510    0.97400     0.97700
+  within       0.9485    0.97450     0.97400
+  between      0.9495    0.97275     0.97675
+```
+
+fiducial: 
+
+```
+           Interval
+Parameter   two-sided left-sided right-sided
+  grandMean   0.96925    0.98400     0.98525
+  within      0.95475    0.97925     0.97550
+  between     0.98325    0.99675     0.98650
+  total       0.95950    0.99375     0.96575
+  CV          0.95975    0.99375     0.96600
+```
+
+![](intervals_grandMean_6x3.png)
+
+![](intervals_within_6x3.png)
+
+![](intervals_between_6x3.png)

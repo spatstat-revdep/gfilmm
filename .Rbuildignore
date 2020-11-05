@@ -9,6 +9,7 @@
 ^inst/predictive$
 ^inst/julia$
 ^inst/benchmarks$
+^inst/scatterplots$
 ^inst/TODO\.txt$
 ^doc$
 ^Meta$

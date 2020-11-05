@@ -1,1 +1,2 @@
 - tolerance intervals (one-sided)
+- check sumWT == 0

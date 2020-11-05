@@ -16,7 +16,7 @@ y_rounded  <- round(y, digits = 1L)
 dat        <- data.frame(
   ylwr = y_rounded - 0.05,
   yupr = y_rounded + 0.05,
-  group = gl(J, I)
+  group = gl(I, J)
 )
 
 microbenchmark(
@@ -30,26 +30,26 @@ library(gfilmm)
 
 mu           <- 10000 # grand mean
 sigmaBetween <- 2
-sigmaWithin  <- 3
-I            <- 20L # number of groups
-J            <- 15L # sample size per group
+sigmaWithin  <- 1e-3
+I            <- 10L # number of groups
+J            <- 5L # sample size per group
 
 set.seed(31415926L)
 groupmeans <- rnorm(I, mu, sigmaBetween)
 y          <- c(
   vapply(groupmeans, function(gmean) rnorm(J, gmean, sigmaWithin), numeric(J))
 )
-y_rounded  <- round(y, digits = 1L)
+y_rounded  <- round(y, digits = 4L)
 dat        <- data.frame(
-  ylwr = y_rounded - 0.05,
-  yupr = y_rounded + 0.05,
-  group = gl(J, I)
+  ylwr = y_rounded - 5e-5,
+  yupr = y_rounded + 5e-5,
+  group = gl(I, J)
 )
 
 
-double = gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = 200L)
+double = gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = 30000L)
 gfiSummary(double)
-long = gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = 200L, long = TRUE)
+long = gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = 6000L, long = TRUE)
 gfiSummary(long)
 
 library(AOV1R)

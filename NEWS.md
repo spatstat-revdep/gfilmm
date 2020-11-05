@@ -3,6 +3,7 @@
 * Fixed a mistake in the C++ code.
 * The main function `gfilmm` has now an option `long`, to run the algorithm with 
 long doubles instead of doubles.
+* Updated the vignette.
 
 # gfilmm 0.1.0
 

@@ -99,12 +99,52 @@ To get a fiducial density, I recommend the 'kde1d' package:
 ```{r gfiDensity_linreg}
 library(kde1d)
 kfit <- kde1d(fidSims$VERTEX[["x"]], weights = fidSims$WEIGHT, mult = 4)
-curve(dkde1d(x, kfit), from = 0.7, to = 1.1)
+curve(dkde1d(x, kfit), from = 0.7, to = 1.1, col = "red", lwd = 2)
+# observe the resemblance with the distribution of the 
+# frequentist estimate of the slope:
+curve(
+  dnorm(x, coef(lmfit)["x"], sqrt(vcov(lmfit)["x","x"])), add = TRUE, 
+  col = "blue", lwd = 2, lty = "dashed"
+)
 ```
 
-***Fiducial predictive inference***. The `gfilmmPredictive` function samples 
-the generalized fiducial predictive distribution. All the functions seen above 
-can be applied to the output.
+The fiducial simulations are weighted, so it makes no sense to plot them 
+without taking the weights into account. We can get "pseudo-simulations" 
+of the fiducial distribution by picking the fiducial simulations at random 
+according to their weight:
+
+```{r scatterplot}
+indcs <- sample.int(20000L, replace = TRUE, prob = fidSims$WEIGHT)
+pseudoSims <- fidSims$VERTEX[indcs,]
+library(GGally)
+ggpairs(
+  pseudoSims,
+  upper = list(continuous = ggally_density),
+  lower = list(continuous = wrap("points", alpha = 0.1))
+)
+```
+
+The scatterplot of the intercept and the slope has the same shape as 
+the frequentist confidence ellipse of these two parameters:
+
+```{r ellipse}
+library(car)
+dataEllipse(
+  pseudoSims[["(Intercept)"]], pseudoSims[["x"]], 
+  levels = c(0.5,0.95), col = c("black", "red"),
+  xlab = "Intercept", ylab = "Slope"
+)
+confidenceEllipse(
+  lmfit, 1:2, levels = c(0.5,0.95), add = TRUE, 
+  col = "blue", lty = "dashed"
+)
+```
+
+
+### Fiducial predictive inference. 
+
+The `gfilmmPredictive` function samples the generalized fiducial predictive
+distribution. All the functions seen above can be applied to the output.
 
 ```{r gfilmmPredictive}
 fpd <- gfilmmPredictive(fidSims, newdata = data.frame(x = c(1, 30)))

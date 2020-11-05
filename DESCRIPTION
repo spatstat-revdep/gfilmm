@@ -23,7 +23,9 @@ Suggests:
     lmerTest,
     emmeans,
     testthat,
-    AOV1R
+    AOV1R,
+    GGally,
+    car
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.1.1
 Encoding: UTF-8

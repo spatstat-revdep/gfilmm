@@ -38,17 +38,18 @@ sigmaPO <- 0.5
 sigmaE <- 2
 sigmaTotal <- sqrt(sigmaO^2 + sigmaPO^2 + sigmaE^2)
 
-nsims <- 30
+nsims <- 100
 fidResults <- stanResults <- vector("list", nsims)
 
 for(i in 1:nsims){
+  cat("\n**********", i, "**********\n")
   dat <- SimAV2mixed(I, J, Kij, mu = 0, alphai = alphai, 
                      sigmaO = sigmaO, sigmaPO = sigmaPO, sigmaE = sigmaE)
   
   stanfit <- stan_lmer(
     y ~  0 + Part + (1|Operator) + (1|Operator:Part), data = dat,
     prior_aux = cauchy(0, 5),
-    prior_covariance = decov(1, 1, 1, 100),
+    prior_covariance = decov(1, 1, 1, scale = 1),
     iter = 2500
   )
   pstrr <- as.data.frame(
@@ -76,7 +77,8 @@ for(i in 1:nsims){
     catch_left = stan[,3] > parms,
     catch_right = stan[,2] < parms
   )
-  
+
+  cat("\n********** GFI **********\n")
   h <- 0.01
   gfi <- gfilmm(~ cbind(y-h,y+h), ~ 0 + Part, ~ Operator + Operator:Part, 
                 data = dat, N = 5000)
@@ -101,12 +103,12 @@ for(i in 1:nsims){
 }
 
 Results <- list(stanResults = stanResults, fidResults = fidResults)
-saveRDS(Results, "~/Work/R/gfilmm/inst/stan/Results.rds")
+saveRDS(Results, "~/Work/R/gfilmm/inst/stan/Results_scale1.rds")
 
 stop()
 
 ################################################################################
-Results <- readRDS("~/Work/R/gfilmm/inst/stan/Results.rds")
+Results <- readRDS("~/Work/R/gfilmm/inst/stan/Results_scale1.rds")
 fidResults <- Results$fidResults
 stanResults <- Results$stanResults
 
@@ -137,17 +139,79 @@ colnames(fidCoverage) <- colnames(stanCoverage) <-
 
 fidMedians <- as.data.frame(vapply(rownames(fidResults[[1]]), function(i){
   vapply(fidResults, function(x) x[i,]["median"], numeric(1))
-}, numeric(100))) 
+}, numeric(30))) 
 
 stanMedians <- as.data.frame(vapply(rownames(stanResults[[1]]), function(i){
   vapply(stanResults, function(x) x[i,]["50%"], numeric(1))
-}, numeric(100))) 
+}, numeric(30))) 
 
 library(kde1d)
-fmedian <- kde1d(fidMedians$sigma_Operator, xmin = 0, mult = 4)
+fmedian <- kde1d(fidMedians$sigma_total, xmin = 0, mult = 4)
 plot(fmedian)
-smedian <- kde1d(stanMedians$sigma_Operator, xmin = 0, mult = 4)
+smedian <- kde1d(stanMedians$sigma_total, xmin = 0, mult = 4)
 plot(smedian)
-summary(fidMedians$sigma_Operator)
-summary(stanMedians$sigma_Operator)
+summary(fidMedians$sigma_total)
+summary(stanMedians$sigma_total)
 
+
+library(rAmCharts4)
+parm <- "sigma_total"
+fintervals <- 
+  vapply(fidResults, function(x) x[parm, c("lwr", "upr")], numeric(2))
+sintervals <- 
+  vapply(stanResults, function(x) x[parm, c("2.5%", "97.5%")], numeric(2))
+dat <- setNames(as.data.frame(t(rbind(fintervals, sintervals))), 
+         c("f1", "f2", "s1", "s2"))
+dat$x = 1:30
+
+flengths <- fintervals[2,] - fintervals[1,]
+slengths <- sintervals[2,] - sintervals[1,]
+plot(slengths ~ flengths, asp=1, pty="s", pch = 19, 
+     xlab = "fiducial", ylab = "Bayesian", 
+     main = "Lengths of the confidence intervals\nof the total standard deviation")
+abline(0,1)
+
+
+
+amDumbbellChart(
+  width = NULL,
+  data = dat[1:15,],
+  draggable = FALSE,
+  category = "x",
+  values = rbind(c("f1","f2"), c("s1","s2")),
+  seriesNames = c("Fiducial", "Bayesian"),
+  chartTitle = amText(
+    paste0("Confidence intervals about the ", "total standard deviation"),
+    fontSize = 17, fontWeight = "bold", fontFamily = "Trebuchet MS"
+  ),
+  #  yLimits = c(-10, 200),
+  segmentsStyle = list(
+    "Fiducial" = amSegment(width = 2, color = "red"),
+    "Bayesian" = amSegment(width = 2, color = "blue")
+  ),
+  bullets = list(
+    f1 = amTriangle(strokeWidth = 0, color = "red"),
+    f2 = amTriangle(rotation = 180, strokeWidth = 0, color = "red"),
+    s1 = amTriangle(strokeWidth = 0, color = "blue"),
+    s2 = amTriangle(rotation = 180, strokeWidth = 0, color = "blue")
+  ),
+  tooltip = amTooltip("upper: {openValueY}\nlower: {valueY}", scale = 0.75),
+  xAxis = list(
+    title = amText(
+      "simulation",
+      fontSize = 17, fontWeight = "bold", fontFamily = "Helvetica"
+    ),
+    labels = amAxisLabels(fontSize = 12)
+  ),
+  yAxis = list(
+    title = amText(
+      "interval",
+      fontSize = 17, fontWeight = "bold", fontFamily = "Helvetica"
+    ),
+    gridLines = amLine("silver", width = 1, opacity = 0.4)
+  ),
+  legend = amLegend(position = "right", itemsWidth = 15, itemsHeight = 15),
+  backgroundColor = "lightyellow",
+  theme = "dataviz",
+  export = TRUE
+)

@@ -43,7 +43,7 @@ options(mc.cores = parallel::detectCores())
 stanfit <- stan_lmer(
   y ~  0 + Part + (1|Operator) + (1|Operator:Part), data = dat,
   prior_aux = cauchy(0, 5),
-  prior_covariance = decov(1, 1, 1, 100),
+  prior_covariance = decov(1, 1, 1, 1),
   iter = 2500
 )
 pstrr <- as.data.frame(

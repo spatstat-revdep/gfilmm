@@ -27,11 +27,11 @@ SimAV2mixed <- function(I, J, Kij, mu=0, alphai, sigmaO=1,
 
 
 set.seed(666)  
-I = 2; J = 6; Kij = rep(5,I*J) #c(2,3,4,5,6,7)#rep(5,I*J)
-alphai <- c(3, -3)
-sigmaO <- 2
-sigmaPO <- 1
-sigmaE <- sqrt(3)
+I = 2; J = 6; Kij = rpois(I*J, 1) + 3#rep(3, I*J) #c(2,3,4,5,6,7)#rep(5,I*J)
+alphai <- c(10, 20)
+sigmaO <- 1
+sigmaPO <- 0.5
+sigmaE <- 2
 dat <- SimAV2mixed(I, J, Kij, mu = 0, alphai = alphai, 
                    sigmaO = sigmaO, sigmaPO = sigmaPO, sigmaE = sigmaE)
 
@@ -41,8 +41,9 @@ lmer(y ~ 0 + Part + (1|Operator) + (1|Operator:Part), data = dat)
 library(rstanarm)
 options(mc.cores = parallel::detectCores())
 stanfit <- stan_lmer(
-  y ~ 0 + Part + (1|Operator) + (1|Operator:Part), data = dat,
-  prior_aux = cauchy(0, 5)
+  y ~  0 + Part + (1|Operator) + (1|Operator:Part), data = dat,
+  prior_aux = cauchy(0, 5),
+  iter = 5000
 )
 pstrr <- as.data.frame(
   stanfit, 
@@ -59,8 +60,24 @@ names(pstrr) <-
 pstrr[["sigma_Operator"]] <- sqrt(pstrr[["sigma_Operator"]])
 pstrr[["sigma_Operator:Part"]] <- sqrt(pstrr[["sigma_Operator:Part"]])
 
+stan <- t(vapply(pstrr, quantile, numeric(3), probs = c(50,2.5,97.5)/100))
+parms <- c(alphai, sigmaE, sigmaO, sigmaPO)
+cbind(
+  stan, 
+  catch_both = stan[,2] < parms & parms < stan[,3],
+  catch_left = stan[,3] > parms,
+  catch_right = stan[,2] < parms
+)
 
 library(gfilmm)
 h <- 0.01
-gfi <- gfilmm(~ cbind(y-h,y+h), ~ Part, ~ Operator, data = dat, 
-              N = 100, thresh=0)
+gfi <- gfilmm(~ cbind(y-h,y+h), ~ 0 + Part, ~ Operator + Operator:Part, 
+              data = dat, N = 10000)
+fid <- gfiSummary(gfi)
+parms <- c(alphai, sigmaO, sigmaPO, sigmaE)
+cbind(
+  fid,
+  catch_both = fid[,3] < parms & parms < fid[,4],
+  catch_left = fid[,4] > parms,
+  catch_right = fid[,3] < parms
+)

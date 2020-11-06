@@ -139,11 +139,11 @@ colnames(fidCoverage) <- colnames(stanCoverage) <-
 
 fidMedians <- as.data.frame(vapply(rownames(fidResults[[1]]), function(i){
   vapply(fidResults, function(x) x[i,]["median"], numeric(1))
-}, numeric(30))) 
+}, numeric(100))) 
 
 stanMedians <- as.data.frame(vapply(rownames(stanResults[[1]]), function(i){
   vapply(stanResults, function(x) x[i,]["50%"], numeric(1))
-}, numeric(30))) 
+}, numeric(100))) 
 
 library(kde1d)
 fmedian <- kde1d(fidMedians$sigma_total, xmin = 0, mult = 4)
@@ -162,7 +162,7 @@ sintervals <-
   vapply(stanResults, function(x) x[parm, c("2.5%", "97.5%")], numeric(2))
 dat <- setNames(as.data.frame(t(rbind(fintervals, sintervals))), 
          c("f1", "f2", "s1", "s2"))
-dat$x = 1:30
+dat$x = 1:100
 
 flengths <- fintervals[2,] - fintervals[1,]
 slengths <- sintervals[2,] - sintervals[1,]

@@ -31,13 +31,13 @@ SimAV2mixed <- function(I, J, Kij, mu=0, alphai, sigmaO=1,
 
 
 set.seed(666)  
-I = 2; J = 6; Kij = rpois(I*J, 1) + 3#rep(3, I*J) #c(2,3,4,5,6,7)#rep(5,I*J)
+I = 2; J = 6; Kij = rpois(I*J, 1) + 3
 alphai <- c(10, 20)
 sigmaO <- 1
 sigmaPO <- 0.5
 sigmaE <- 2
 
-nsims <- 2
+nsims <- 100
 fidResults <- stanResults <- vector("list", nsims)
 
 for(i in 1:nsims){
@@ -86,7 +86,17 @@ for(i in 1:nsims){
   )
 }
 
-t(vapply(rownames(fidResults[[1]]), function(i){
+Results <- list(stanResults = stanResults, fidResults = fidResults)
+saveRDS(Results, "~/Work/R/gfilmm/inst/stan/Results.rds")
+
+stop()
+
+################################################################################
+Results <- load("~/Work/R/gfilmm/inst/stan/Results.rds")
+fidResults <- Results$fidResults
+stanResults <- Results$stanResults
+
+fidCoverage <- t(vapply(rownames(fidResults[[1]]), function(i){
   vapply(
     c("catch_both", "catch_left", "catch_right"),
     function(y){
@@ -94,10 +104,10 @@ t(vapply(rownames(fidResults[[1]]), function(i){
     },
     numeric(1)
   )
-}, numeric(3)))
+}, numeric(3))) * 100
 
 
-t(vapply(rownames(stanResults[[1]]), function(i){
+stanCoverage <- t(vapply(rownames(stanResults[[1]]), function(i){
   vapply(
     c("catch_both", "catch_left", "catch_right"),
     function(y){
@@ -105,4 +115,8 @@ t(vapply(rownames(stanResults[[1]]), function(i){
     },
     numeric(1)
   )
-}, numeric(3)))
+}, numeric(3))) * 100
+
+colnames(fidCoverage) <- colnames(stanCoverage) <- 
+  c("two-sided", "left-sided", "right-sided")
+

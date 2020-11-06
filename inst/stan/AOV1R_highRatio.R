@@ -4,8 +4,9 @@ library(rstanarm)
 options(mc.cores = parallel::detectCores())
 
 mu           <- 10000 # grand mean
-sigmaBetween <- 2
 sigmaWithin  <- 1e-3
+ratio        <- 50
+( sigmaBetween <- sigmaWithin * ratio )
 I            <- 10L # number of groups
 J            <- 5L # sample size per group
 
@@ -24,9 +25,10 @@ dat        <- data.frame(
 
 confint(aov1r(y ~ group, data = dat))
 
-double = gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = 30000L)#, thresh = 5000)
+N <- 5000L
+double = gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = N)#, thresh = 5000)
 gfiSummary(double)
-table(attr(double, "ESS")/(30000/2) < 1)
+table(attr(double, "ESS")/(N/2) < 1)
 
 long = gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = 6000L, long = TRUE)
 gfiSummary(long)
@@ -35,10 +37,20 @@ gfiSummary(long)
 stan <- stan_lmer(
   y ~ (1|group), data = dat, 
   prior_aux = cauchy(0, 5),
-  prior_covariance = decov(1, 1, 1, 1000)
+  prior_covariance = decov(1, 1, 1, 1)
 )
-posterior_interval(stan)
-
+pstrr <- as.data.frame(
+  stan, 
+  pars = c(
+    "(Intercept)", 
+    "sigma", 
+    "Sigma[group:(Intercept),(Intercept)]"
+  )
+)
+names(pstrr)[2L:3L] <- c("sigma_error",  "sigma_group")
+pstrr$sigma_total <- with(pstrr, sqrt(sigma_group + sigma_error^2))
+pstrr[["sigma_group"]] <- sqrt(pstrr[["sigma_group"]])
+t(vapply(pstrr, quantile, numeric(2), probs = c(2.5,97.5)/100))
 
 #####
 library(rstan)

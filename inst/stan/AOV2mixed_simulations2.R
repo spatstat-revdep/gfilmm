@@ -36,8 +36,9 @@ alphai <- c(10, 20)
 sigmaO <- 1
 sigmaPO <- 0.5
 sigmaE <- 2
+sigmaTotal <- sqrt(sigmaO^2 + sigmaPO^2 + sigmaE^2)
 
-nsims <- 100
+nsims <- 30
 fidResults <- stanResults <- vector("list", nsims)
 
 for(i in 1:nsims){
@@ -48,7 +49,7 @@ for(i in 1:nsims){
     y ~  0 + Part + (1|Operator) + (1|Operator:Part), data = dat,
     prior_aux = cauchy(0, 5),
     prior_covariance = decov(1, 1, 1, 100),
-    iter = 5000
+    iter = 2500
   )
   pstrr <- as.data.frame(
     stanfit, 
@@ -62,11 +63,13 @@ for(i in 1:nsims){
   )
   names(pstrr) <- 
     c("PartA1", "PartA2", "sigma_error", "sigma_Operator", "sigma_Operator:Part")
+  pstrr$sigma_total <- 
+    with(pstrr, sqrt(sigma_Operator + `sigma_Operator:Part` + sigma_error^2))
   pstrr[["sigma_Operator"]] <- sqrt(pstrr[["sigma_Operator"]])
   pstrr[["sigma_Operator:Part"]] <- sqrt(pstrr[["sigma_Operator:Part"]])
   
   stan <- t(vapply(pstrr, quantile, numeric(3), probs = c(50,2.5,97.5)/100))
-  parms <- c(alphai, sigmaE, sigmaO, sigmaPO)
+  parms <- c(alphai, sigmaE, sigmaO, sigmaPO, sigmaTotal)
   stanResults[[i]] <- cbind(
     stan, 
     catch_both = stan[,2] < parms & parms < stan[,3],
@@ -76,15 +79,25 @@ for(i in 1:nsims){
   
   h <- 0.01
   gfi <- gfilmm(~ cbind(y-h,y+h), ~ 0 + Part, ~ Operator + Operator:Part, 
-                data = dat, N = 10000)
+                data = dat, N = 5000)
   fid <- gfiSummary(gfi)
-  parms <- c(alphai, sigmaO, sigmaPO, sigmaE)
+  fid <- rbind(
+    fid, 
+    sigma_total = c(
+      NA, 
+      spatstat::quantile.ewcdf(gfiCDF(~ sqrt(sigma_Operator^2 + `sigma_Operator:Part`^2 + sigma_error^2), gfi), probs = 0.5), 
+      gfiConfInt(~ sqrt(sigma_Operator^2 + `sigma_Operator:Part`^2 + sigma_error^2), gfi), 
+      0
+    )
+  )
+  parms <- c(alphai, sigmaO, sigmaPO, sigmaE, sigmaTotal)
   fidResults[[i]] <- cbind(
     fid,
     catch_both = fid[,3] < parms & parms < fid[,4],
     catch_left = fid[,4] > parms,
     catch_right = fid[,3] < parms
   )
+  cat("\n**********", i, "**********\n")
 }
 
 Results <- list(stanResults = stanResults, fidResults = fidResults)

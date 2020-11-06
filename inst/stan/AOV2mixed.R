@@ -43,7 +43,8 @@ options(mc.cores = parallel::detectCores())
 stanfit <- stan_lmer(
   y ~  0 + Part + (1|Operator) + (1|Operator:Part), data = dat,
   prior_aux = cauchy(0, 5),
-  iter = 5000
+  prior_covariance = decov(1, 1, 1, 100),
+  iter = 2500
 )
 pstrr <- as.data.frame(
   stanfit, 
@@ -72,7 +73,7 @@ cbind(
 library(gfilmm)
 h <- 0.01
 gfi <- gfilmm(~ cbind(y-h,y+h), ~ 0 + Part, ~ Operator + Operator:Part, 
-              data = dat, N = 10000)
+              data = dat, N = 5000)
 fid <- gfiSummary(gfi)
 parms <- c(alphai, sigmaO, sigmaPO, sigmaE)
 cbind(
@@ -81,3 +82,27 @@ cbind(
   catch_left = fid[,4] > parms,
   catch_right = fid[,3] < parms
 )
+
+#########
+library(ggplot2)
+
+indcs <- sample.int(5000, replace = TRUE, prob = gfi$WEIGHT)
+sims <- gfi$VERTEX[indcs,]
+
+ggplot(sims, aes(sigma_Operator, `sigma_Operator:Part`)) + 
+  geom_point(alpha = 0.2)
+
+ggplot(pstrr, aes(sigma_Operator, `sigma_Operator:Part`)) + 
+  geom_point(alpha = 0.2)
+
+gfiConfInt(~ sigma_Operator^2 + `sigma_Operator:Part`^2 + sigma_error^2, gfi)
+
+pstrr$sigma2tot = with(pstrr, sigma_Operator^2 + `sigma_Operator:Part`^2 + sigma_error^2)
+quantile(pstrr$sigma2tot, probs = c(2.5,97.5)/100)
+
+
+ggplot(sims, aes(PartA1, PartA2)) + 
+  geom_point(alpha = 0.2)
+
+ggplot(pstrr, aes(PartA1, PartA2)) + 
+  geom_point(alpha = 0.2)

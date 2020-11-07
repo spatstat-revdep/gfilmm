@@ -93,23 +93,19 @@ Results <- list(
   stanIntervals2 = stanIntervals2
 )
 
-saveRDS(Results, "~/Work/R/gfilmm/inst/stan/AOV1R_highRatio_simulations2.rds")
+saveRDS(Results, "~/Work/R/gfilmm/inst/stan/AOV1R_highRatio_simulations.rds")
 
 stop()
 
 # ####
 Results <- readRDS("~/Work/R/gfilmm/inst/stan/AOV1R_highRatio_simulations.rds")
-Results2 <- readRDS("~/Work/R/gfilmm/inst/stan/AOV1R_highRatio_simulations2.rds")
-
-Results$stanIntervals2 <- Results2$stanIntervals2
-saveRDS(Results, "~/Work/R/gfilmm/inst/stan/AOV1R_highRatio_simulations.rds")
 
 nsims <- 15L
 freqWithin <- as.data.frame(Results$freqIntervals$within)
 fidWithin <- as.data.frame(Results$fidIntervals$within)
 stanWithin <- as.data.frame(Results$stanIntervals$within)
 stan2Within <- as.data.frame(Results$stanIntervals2$within)
-freqWithin$simulation <- fidWithin$simulation <- stan2Within <- 
+freqWithin$simulation <- fidWithin$simulation <- stan2Within$simulation <- 
   stanWithin$simulation <- factor(1L:nsims)
 freqWithin$inference <- "frequentist"
 fidWithin$inference <- "fiducial"
@@ -149,7 +145,7 @@ ggplot(
     group = simulation, color = inference
   )
 ) + geom_pointrange(position = position_dodge2(width = 0.5)) + 
-  scale_discrete_manual("colour", values = c("red", "blue")) + 
+  scale_discrete_manual("colour", values = c("green", "blue")) + 
   ylab("interval") + 
   geom_hline(yintercept = 1, linetype = "dashed") + 
   ggtitle("Confidence intervals about the within standard deviation", 
@@ -200,7 +196,7 @@ ggplot(
     group = simulation, color = inference
   )
 ) + geom_pointrange(position = position_dodge2(width = 0.5)) + 
-  scale_discrete_manual("colour", values = c("red", "blue")) + 
+  scale_discrete_manual("colour", values = c("green", "blue")) + 
   ylab("interval") + 
   geom_hline(yintercept = 50, linetype = "dashed") + 
   ggtitle("Confidence intervals about the between standard deviation", 

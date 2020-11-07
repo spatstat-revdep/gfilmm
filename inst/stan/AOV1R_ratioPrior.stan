@@ -15,13 +15,18 @@ parameters {
   real mu;
   real alpha[I];
   real<lower=0> sigma_error;
+  real<lower=0> ratio;
+}
+
+transformed parameters {
   real<lower=0> sigma_group;
+  sigma_group = ratio * sigma_error;
 }
 
 model {
   mu ~ normal(0, 100);
   sigma_error ~ cauchy(0, 5);
-  sigma_group ~ cauchy(0, 5);
+  ratio ~ cauchy(0, 5);
   for(i in 1:I){
     alpha[i] ~ normal(0, sigma_group);
   }

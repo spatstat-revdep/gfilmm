@@ -29,8 +29,8 @@ SimAV2mixed <- function(I, J, Kij, mu=0, alphai, sigmaO=1,
 set.seed(666)  
 I = 2; J = 6; Kij = rpois(I*J, 1) + 3#rep(3, I*J) #c(2,3,4,5,6,7)#rep(5,I*J)
 alphai <- c(10, 20)
-sigmaO <- 1
-sigmaPO <- 0.5
+sigmaO <- 50
+sigmaPO <- 1
 sigmaE <- 2
 dat <- SimAV2mixed(I, J, Kij, mu = 0, alphai = alphai, 
                    sigmaO = sigmaO, sigmaPO = sigmaPO, sigmaE = sigmaE)
@@ -43,7 +43,7 @@ options(mc.cores = parallel::detectCores())
 stanfit <- stan_lmer(
   y ~  0 + Part + (1|Operator) + (1|Operator:Part), data = dat,
   prior_aux = cauchy(0, 5),
-  prior_covariance = decov(1, 1, 1, 1),
+  prior_covariance = decov(1, concentration = 1e-6, shape = 11/100, scale = 100),
   iter = 2500
 )
 pstrr <- as.data.frame(
@@ -73,7 +73,7 @@ cbind(
 library(gfilmm)
 h <- 0.01
 gfi <- gfilmm(~ cbind(y-h,y+h), ~ 0 + Part, ~ Operator + Operator:Part, 
-              data = dat, N = 5000)
+              data = dat, N = 30000)
 fid <- gfiSummary(gfi)
 parms <- c(alphai, sigmaO, sigmaPO, sigmaE)
 cbind(

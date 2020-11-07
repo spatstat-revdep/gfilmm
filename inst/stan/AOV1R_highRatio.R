@@ -4,9 +4,9 @@ library(rstanarm)
 options(mc.cores = parallel::detectCores())
 
 mu           <- 10000 # grand mean
-sigmaWithin  <- 1e-3
+sigmaWithin  <- 1
 ratio        <- 50
-( sigmaBetween <- sigmaWithin * ratio )
+sigmaBetween <- sigmaWithin * ratio 
 I            <- 10L # number of groups
 J            <- 5L # sample size per group
 
@@ -37,7 +37,7 @@ gfiSummary(long)
 stan <- stan_lmer(
   y ~ (1|group), data = dat, 
   prior_aux = cauchy(0, 5),
-  prior_covariance = decov(1, 1, 1, 1)
+  prior_covariance = decov(1, 1, 5, 10)
 )
 pstrr <- as.data.frame(
   stan, 

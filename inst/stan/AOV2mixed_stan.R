@@ -2,6 +2,33 @@ library(rstan)
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
+SimAV2mixed <- function(I, J, Kij, mu=0, alphai, sigmaO=1,
+                        sigmaPO=1, sigmaE=1, factor.names=c("Part","Operator"),
+                        resp.name="y", keep.intermediate=FALSE){
+  Operator <- rep(1:J, each=I)
+  Oj <- rep(rnorm(J, 0, sigmaO), each=I)
+  Part <- rep(1:I, times=J)
+  Pi <- rep(alphai, times=J)
+  POij <- rnorm(I*J, 0, sigmaPO)
+  simdata0 <- data.frame(Part, Operator, Pi, Oj, POij)
+  simdata0$Operator <- factor(simdata0$Operator)
+  levels(simdata0$Operator) <- 
+    sprintf(paste0("%0", floor(log10(J))+1, "d"), 1:J)
+  simdata0$Part <- factor(simdata0$Part)
+  levels(simdata0$Part) <- sprintf(paste0("%0", floor(log10(I))+1, "d"), 1:I)
+  simdata <- 
+    as.data.frame(
+      sapply(simdata0, function(v) rep(v, times=Kij), simplify=FALSE))
+  Eijk <- rnorm(sum(Kij), 0, sigmaE)
+  simdata <- cbind(simdata, Eijk)
+  simdata[[resp.name]] <- mu + with(simdata, Oj+Pi+POij+Eijk)
+  levels(simdata[,1]) <- paste0("A", levels(simdata[,1]))
+  levels(simdata[,2]) <- paste0("B", levels(simdata[,2]))
+  names(simdata)[1:2] <- factor.names
+  if(!keep.intermediate) simdata <- simdata[,c(factor.names,resp.name)]
+  simdata
+}
+
 set.seed(666)  
 I = 2; J = 6; Kij = rpois(I*J, 1) + 3#rep(3, I*J) #c(2,3,4,5,6,7)#rep(5,I*J)
 alphai <- c(10, 20)

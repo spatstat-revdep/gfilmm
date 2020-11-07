@@ -1,2 +1,2 @@
 - tolerance intervals (one-sided)
-- check sumWT == 0
+- check sumWT == 0 -> in the error message, add "Increase number of simulations"

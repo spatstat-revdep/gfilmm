@@ -110,4 +110,40 @@ ggplot(
   ylab("interval") + 
   geom_hline(yintercept = 1, linetype = "dashed") + 
   ggtitle("Confidence intervals about the within standard deviation", 
-          subtitle = "STAN")
+          subtitle = "Bayesian")
+
+# between ####
+freqBetween <- as.data.frame(Results$freqIntervals$between)
+fidBetween <- as.data.frame(Results$fidIntervals$between)
+stanBetween <- as.data.frame(Results$stanIntervals$between)
+freqBetween$simulation <- fidBetween$simulation <- 
+  stanBetween$simulation <- factor(1L:nsims)
+freqBetween$inference <- "frequentist"
+fidBetween$inference <- "fiducial"
+freqAndFid <- rbind(freqBetween, fidBetween)
+
+library(ggplot2)
+ggplot(
+  freqAndFid, 
+  aes(
+    x = simulation, y = estimate, ymin = lwr, ymax = upr, 
+    group = simulation, color = inference
+  )
+) + geom_pointrange(position = position_dodge2(width = 0.5)) + 
+  scale_discrete_manual("colour", values = c("red", "blue")) + 
+  ylab("interval") + 
+  geom_hline(yintercept = 50, linetype = "dashed") + 
+  ggtitle("Confidence intervals about the between standard deviation", 
+          subtitle = "Fiducial and frequentist")
+
+ggplot(
+  stanBetween, 
+  aes(
+    x = simulation, y = estimate, ymin = lwr, ymax = upr
+  )
+) + geom_pointrange() + 
+  ylab("interval") + 
+  geom_hline(yintercept = 50, linetype = "dashed") + 
+  ggtitle("Confidence intervals about the between standard deviation", 
+          subtitle = "Bayesian")
+

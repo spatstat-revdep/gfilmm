@@ -73,9 +73,20 @@ const int sgn(const Real x) {
 
 std::uniform_real_distribution<double> runif(0.0, 1.0);
 
+const size_t spow(size_t base, size_t exp) {
+  size_t result = 1;
+  while(exp) {
+    if(exp & 1)
+      result *= base;
+    exp >>= 1;
+    base *= base;
+  }
+  return result;
+}
+
 template <typename Real>
-const Real approx(const Real x, const unsigned n) {
-  return round(x * pow(10, n)) / pow(10, n);
+const Real approx(const Real x, const size_t n) {
+  return round(x * spow(10, n)) / spow(10, n);
 }
 
 template <typename Real>
@@ -323,17 +334,6 @@ const Eigen::MatrixXi vv2matrix(std::vector<std::vector<int>> U,
     }
   }
   return out;
-}
-
-const size_t spow(size_t base, size_t exp) {
-  size_t result = 1;
-  while(exp) {
-    if(exp & 1)
-      result *= base;
-    exp >>= 1;
-    base *= base;
-  }
-  return result;
 }
 
 const Eigen::VectorXi Vsort(Eigen::VectorXi V) {
@@ -784,8 +784,9 @@ GFI gfilmm_(const Eigen::Matrix<Real, Eigen::Dynamic, 1>& L,
         Rcpp::Rcout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
         Rcpp::Rcout << "!!!   Error: possible underflow. !!!\n";
         Rcpp::Rcout << "!!!   Potential resolutions:     !!!\n";
-        Rcpp::Rcout << "!!!   1.  Widen data intervals   !!!\n";
-        Rcpp::Rcout << "!!!   2.  Center data            !!!\n";
+        Rcpp::Rcout << "!!!   1.  Run more simulations   !!!\n";
+        Rcpp::Rcout << "!!!   2.  Widen data intervals   !!!\n";
+        Rcpp::Rcout << "!!!   3.  Center data            !!!\n";
         Rcpp::Rcout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
         throw Rcpp::exception("Something bad occured.");
       }

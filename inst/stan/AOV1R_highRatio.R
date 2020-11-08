@@ -6,9 +6,9 @@ options(mc.cores = parallel::detectCores())
 mu           <- 10000 # grand mean
 sigmaWithin  <- 1
 ratio        <- 50
-sigmaBetween <- sigmaWithin * ratio 
-I            <- 10L # number of groups
-J            <- 5L # sample size per group
+sigmaBetween <- 1#sigmaWithin * ratio 
+I            <- 3#10L # number of groups
+J            <- 2#5L # sample size per group
 
 set.seed(31415926L)
 groupmeans <- rnorm(I, mu, sigmaBetween)
@@ -33,11 +33,15 @@ table(attr(double, "ESS")/(N/2) < 1)
 long = gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = 6000L, long = TRUE)
 gfiSummary(long)
 
+shape <- 5
+scale <- 1
 
 stan <- stan_lmer(
   y ~ (1|group), data = dat, 
+  prior_intercept = normal(0, 100),
   prior_aux = cauchy(0, 5),
-  prior_covariance = decov(1, 1, 5, 10)
+  prior_covariance = decov(1, 1, shape, scale),
+  iter = 10000
 )
 pstrr <- as.data.frame(
   stan, 
@@ -50,7 +54,7 @@ pstrr <- as.data.frame(
 names(pstrr)[2L:3L] <- c("sigma_error",  "sigma_group")
 pstrr$sigma_total <- with(pstrr, sqrt(sigma_group + sigma_error^2))
 pstrr[["sigma_group"]] <- sqrt(pstrr[["sigma_group"]])
-t(vapply(pstrr, quantile, numeric(2), probs = c(2.5,97.5)/100))
+rstanarm <- t(vapply(pstrr, quantile, numeric(2), probs = c(2.5,97.5)/100))
 
 #####
 library(rstan)
@@ -65,7 +69,8 @@ stanmodel <- stan_model(
 ### Stan data
 standata <- list(
   y=dat$y, N=nrow(dat), I = I,
-  groupID = as.integer(dat$group)
+  groupID = as.integer(dat$group),
+  shape = shape, rate = 1/scale
 )
 
 ### Stan initial values
@@ -81,7 +86,7 @@ inits <- function(chain_id){
 
 ### run Stan
 stansamples <- sampling(stanmodel, data = standata, init=inits, 
-                        iter = 5000, warmup = 1000, chains = 4)
+                        iter = 10000, warmup = 5000, chains = 4)
 #                        control=list(adapt_delta=0.999, max_treedepth=15))
 
 ### outputs
@@ -92,5 +97,5 @@ codasamples <- do.call(
     rstan::extract(stansamples, permuted=FALSE, 
                    pars = c("mu", "sigma_error", "sigma_group", "sigma_total")), 
     2, mcmc))
-summary(codasamples)
+summary(codasamples)$quantiles
 

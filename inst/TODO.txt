@@ -1,2 +1,3 @@
 - tolerance intervals (one-sided)
-- check sumWT == 0 -> in the error message, add "Increase number of simulations"
+- check sumWT == 0 -> in the error message, add "Increase number of simulations" - DONE
+- use pointers for particles instead of vectors

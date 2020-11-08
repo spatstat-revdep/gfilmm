@@ -49,7 +49,7 @@ standata <- list(
   PartID = as.integer(dat$Part),
   OperatorID = as.integer(dat$Operator),
   InteractionID = as.integer(dat$Part:dat$Operator),
-  shape = 10, scale = 1, concentration = 5
+  shape = 1e6, scale = 1/1e-7, concentration = 1
 )
 
 ### Stan initial values
@@ -65,7 +65,7 @@ inits <- function(chain_id){
 
 ### run Stan
 stansamples <- sampling(stanmodel, data = standata, init=inits, 
-                        iter = 5000, warmup = 2500, chains = 4)
+                        iter = 10000, warmup = 5000, chains = 4)
 #                        control=list(adapt_delta=0.999, max_treedepth=15))
 
 ### outputs
@@ -76,14 +76,16 @@ codasamples <- do.call(
     rstan::extract(stansamples, permuted=FALSE, 
                    pars = c("PartA", "sigmaE", "sigmaO", "sigmaOP", "sigmaTotal")), 
     2, mcmc))
-summary(codasamples)
-
+x <- summary(codasamples)
+x$quantiles
 
 # RSTANARM ####
 library(rstanarm)
 rstanarm <- stan_lmer(
-  y ~  0 + Part + (1|Operator) + (1|Operator:Part), data = dat,
+  y ~  Part + (1|Operator) + (1|Operator:Part), data = dat,
+  prior = normal(0, 100),
   prior_aux = cauchy(0, 5),
-  prior_covariance = decov(concentration = 5, shape = 10, scale = 1),
+  prior_covariance = decov(concentration = 1, shape = 1e6, scale = 1e-7/sqrt(2)),
   iter = 5000
 )
+posterior_interval(rstanarm, prob = 95/100)

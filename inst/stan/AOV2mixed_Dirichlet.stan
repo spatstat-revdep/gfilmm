@@ -17,6 +17,7 @@ parameters {
   vector[I] PartA;
   vector[J] Op;
   vector[I*J] OpPart;
+  real<lower=0> sigmaE;
 }
 
 transformed parameters {
@@ -24,7 +25,6 @@ transformed parameters {
   vector<lower=0>[2] sigmas_between;
   real<lower=0> sigmaO;
   real<lower=0> sigmaOP;
-  real<lower=0> sigmaE;
   sigma_between_total = sqrt(2) * tau; 
   sigmas_between = sigma_between_total * sqrt(theta);
   sigmaO = sigmas_between[1];
@@ -37,6 +37,7 @@ model {
   Op ~ normal(0, sigmaO);
   OpPart ~ normal(0, sigmaOP);
   sigmaE ~ cauchy(0, 5);
+  PartA ~ normal(0, 100); 
   for(k in 1:N){
     y[k] ~ normal(
       PartA[PartID[k]] + 

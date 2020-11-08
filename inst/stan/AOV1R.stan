@@ -9,6 +9,8 @@ data {
   real y[N];
   int<lower=1> I;
   int<lower=1> groupID[N];
+  real<lower=0> shape;
+  real<lower=0> rate;
 }
 
 parameters {
@@ -21,7 +23,7 @@ parameters {
 model {
   mu ~ normal(0, 100);
   sigma_error ~ cauchy(0, 5);
-  sigma_group ~ cauchy(0, 5);
+  sigma_group ~ gamma(shape, rate);
   for(i in 1:I){
     alpha[i] ~ normal(0, sigma_group);
   }

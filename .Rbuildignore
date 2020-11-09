@@ -10,6 +10,7 @@
 ^inst/julia$
 ^inst/benchmarks$
 ^inst/scatterplots$
+^inst/AOV2R$
 ^inst/TODO\.txt$
 ^doc$
 ^Meta$

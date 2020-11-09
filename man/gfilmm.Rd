@@ -5,7 +5,7 @@
 \alias{print.gfilmm}
 \title{Generalized fiducial inference}
 \usage{
-gfilmm(y, fixed, random, data, N, thresh = N/2, long = FALSE)
+gfilmm(y, fixed, random, data, N, thresh = N/2, long = FALSE, seed = NULL)
 
 \method{print}{gfilmm}(x, ...)
 }
@@ -26,6 +26,9 @@ for no random effect}
 
 \item{long}{logical, whether to use long doubles instead of doubles in the 
 algorithm}
+
+\item{seed}{the seed for the C++ random numbers generator, a positive 
+integer, or \code{NULL} to use a random seed}
 
 \item{x}{a \code{gfilmm} object}
 

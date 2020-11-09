@@ -27,6 +27,7 @@ getRE2 <- function(data, random, check){
       "Found a random effect with a lone level."
     )
   }
+  rdat <- lapply(rdat, function(fct) factor(as.integer(fct)))
   RE <- as.data.frame(lapply(setNames(tlabs, tlabs), function(tlab){
     droplevels(lazy_eval(as.lazy(tlab), data = rdat))
   }), check.names = FALSE)

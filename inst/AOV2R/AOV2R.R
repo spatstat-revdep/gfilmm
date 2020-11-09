@@ -13,7 +13,7 @@ SimAOV2R <- function(I, J, Kij, mu = 0, sigmaP = 1, sigmaO = 1, sigmaPO = 1,
     rep(sprintf(paste0("A%0", floor(log10(I)) + 1, "d"), 1:I), times = J),
   )
   Oj <- rep(rnorm(J, 0, sigmaO), each = I)
-  Pi <- rep(rnorm(I, 0, sigmaO), times = J)
+  Pi <- rep(rnorm(I, 0, sigmaP), times = J)
   POij <- rnorm(I * J, 0, sigmaPO)
   simdata0 <- data.frame(Part, Operator, Pi, Oj, POij)
   simdata <- simdata0[rep(1:nrow(simdata0), times = Kij), ]
@@ -83,11 +83,19 @@ confintAOV2R <- function(dat, alpha = 0.05) {
 }
 
 
-
+set.seed(3141)
 dat <- SimAOV2R(6, 6, 3)
 confintAOV2R(dat)
 
+library(rstanarm)
+options(mc.cores = parallel::detectCores())
+rsa <- stan_lmer(y ~ (1|Part) + (1|Operator) + (1|Part:Operator), data = dat, 
+                 iter = 10000,
+                 prior_aux = cauchy(0, 5),
+                 prior_covariance = decov(shape = 1/15, scale = 15))
+tail(posterior_interval(rsa, prob = 0.95))
+
 library(gfilmm)
-gf <- gfilmm(~ cbind(y-0.01, y+0.01), ~ 1, ~ Part*Operator, data = dat, N = 5000)
-gfiSummary(gf)
+gf2 <- gfilmm(~ cbind(y-0.01, y+0.01), ~ 1, ~ Part+Operator, data = dat, N = 3000)
+gfiSummary(gf2)#^2
 

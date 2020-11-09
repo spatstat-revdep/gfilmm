@@ -239,10 +239,10 @@ results change. Since we have already tried 20000 simulations, let us try with
 
 ```{r parallel}
 library(doParallel)
-cl <- makePSOCKcluster(2)
+cl <- makePSOCKcluster(2L)
 registerDoParallel(cl)
 
-gfs <- foreach(i = c(3L, 4L), .combine=list) %do% 
+gfs <- foreach(i = c(3L, 4L), .combine = list, .export = "gfilmm") %dopar% 
   gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = i * 10000L)
 
 stopCluster(cl)

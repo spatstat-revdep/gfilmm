@@ -99,8 +99,8 @@ library(gfilmm)
 library(doParallel)
 cl <- makePSOCKcluster(2)
 registerDoParallel(cl)
-gfs <- foreach(i = 2:3, .combine=list) %do% 
-  gfilmm(~ cbind(y-0.01, y+0.01), ~ 1, ~ Part*Operator, data = dat, N = 10000*i)
+gfs <- foreach(i = 2:3, .combine=list, .export = "gfilmm") %dopar% 
+  gfilmm(~ cbind(y-0.01, y+0.01), ~ 1, ~ Part*Operator, data = dat, N = 2000*i)
 stopCluster(cl)
 lapply(gfs, gfiSummary)
 

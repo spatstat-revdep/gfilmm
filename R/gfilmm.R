@@ -69,7 +69,8 @@ gfilmm <- function(y, fixed, random, data, N, thresh=N/2, long=FALSE){
   tlabs <- head(names(RE2), -1L)
   Z <- getZ(RE2) 
   E <- vapply(RE2, nlevels, integer(1L))
-  RE2 <- vapply(RE2, as.integer, integer(n)) - 1L
+#  RE2 <- vapply(RE2, as.integer, integer(n)) - 1L
+  RE2 <- vapply(RE2, function(x) recode(x), integer(n))
   gfi <- if(long){
     gfilmm_long(yl, yu, FE, Z, RE2, E, N, thresh)
   }else{

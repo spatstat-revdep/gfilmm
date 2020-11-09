@@ -1,3 +1,9 @@
+#' @importFrom forcats fct_reorder
+#' @noRd
+recode <- function(x){
+  as.integer(fct_reorder(x, seq_along(x))) - 1L
+}
+
 #' @importFrom lazyeval f_eval_rhs as.lazy lazy_eval
 #' @importFrom stats terms.formula setNames
 #' @noRd
@@ -27,7 +33,7 @@ getRE2 <- function(data, random, check){
       "Found a random effect with a lone level."
     )
   }
-  rdat <- lapply(rdat, function(fct) factor(as.integer(fct)))
+  #rdat <- lapply(rdat, function(fct) factor(as.integer(fct)))
   RE <- as.data.frame(lapply(setNames(tlabs, tlabs), function(tlab){
     droplevels(lazy_eval(as.lazy(tlab), data = rdat))
   }), check.names = FALSE)

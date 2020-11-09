@@ -96,6 +96,6 @@ rsa <- stan_lmer(y ~ (1|Part) + (1|Operator) + (1|Part:Operator), data = dat,
 tail(posterior_interval(rsa, prob = 0.95))
 
 library(gfilmm)
-gf2 <- gfilmm(~ cbind(y-0.01, y+0.01), ~ 1, ~ Part+Operator, data = dat, N = 3000)
+gf2 <- gfilmm(~ cbind(y-0.01, y+0.01), ~ 1, ~ Part*Operator, data = dat, N = 3000)
 gfiSummary(gf2)#^2
 

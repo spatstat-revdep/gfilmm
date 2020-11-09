@@ -25,7 +25,8 @@ Suggests:
     testthat,
     AOV1R,
     GGally,
-    car
+    car,
+    doParallel
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.1.1
 Encoding: UTF-8

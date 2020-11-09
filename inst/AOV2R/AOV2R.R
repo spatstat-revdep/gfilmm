@@ -96,6 +96,12 @@ rsa <- stan_lmer(y ~ (1|Part) + (1|Operator) + (1|Part:Operator), data = dat,
 tail(posterior_interval(rsa, prob = 0.95))
 
 library(gfilmm)
-gf2 <- gfilmm(~ cbind(y-0.01, y+0.01), ~ 1, ~ Part*Operator, data = dat, N = 3000)
-gfiSummary(gf2)#^2
+library(doParallel)
+cl <- makePSOCKcluster(2)
+registerDoParallel(cl)
+gfs <- foreach(i = 2:3, .combine=list) %do% 
+  gfilmm(~ cbind(y-0.01, y+0.01), ~ 1, ~ Part*Operator, data = dat, N = 10000*i)
+stopCluster(cl)
+lapply(gfs, gfiSummary)
+
 

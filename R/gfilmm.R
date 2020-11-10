@@ -19,8 +19,9 @@
 #' @return A list with two components: a dataframe \code{VERTEX}, and a vector 
 #'   \code{WEIGHT}. It has class \code{gfilmm}.
 #' 
-#' @importFrom stats model.matrix
+#' @importFrom stats model.matrix terms.formula
 #' @importFrom utils head
+#' @importFrom rgr gx.sort.df
 #' @export
 #' 
 #' @references J. Cisewski and J.Hannig. 
@@ -47,6 +48,11 @@ gfilmm <- function(
     as.integer(abs(seed))
   }
   data <- droplevels(data)
+  if(!is.null(random)){
+    factors <- rownames(attr(terms.formula(random), "factors"))
+    frmla <- as.formula(paste0("~ ", paste0(factors, collapse = " + ")))
+    data <- gx.sort.df(frmla, data)
+  }
   Y <- f_eval_rhs(y, data = data)
   if(!is.matrix(Y) || ncol(Y) != 2L){
     stop(

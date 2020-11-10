@@ -99,6 +99,7 @@ library(gfilmm)
 library(doParallel)
 cl <- makePSOCKcluster(3L)
 registerDoParallel(cl)
+dat <- gx.sort.df(~ Part + Operator, dat)
 gfs <- foreach(i = c(3L,4L,5L), .combine=list, .multicombine = TRUE, .export = "gfilmm") %dopar% 
   gfilmm(~ cbind(y-0.01, y+0.01), ~ 1, ~ Part+Operator, data = dat, N = 10000*i, long = FALSE)
 stopCluster(cl)

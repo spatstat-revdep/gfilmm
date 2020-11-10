@@ -500,6 +500,10 @@ GFI gfilmm_(const Eigen::Matrix<Real, Eigen::Dynamic, 1>& L,
 
   const Eigen::VectorXi K_start =
       Eigen::Map<Eigen::VectorXi, Eigen::Unaligned>(C.data(), Dim);
+  Eigen::VectorXi JJ =
+    Eigen::Map<Eigen::VectorXi, Eigen::Unaligned>(C.data(), Dim);
+  
+  
   for(size_t i = 0; i < n - Dim; i++) {
     for(size_t j = 0; j < N; j++) {
       Z[re - 1](K[i], j) = 0.0;
@@ -801,6 +805,10 @@ GFI gfilmm_(const Eigen::Matrix<Real, Eigen::Dynamic, 1>& L,
       WTnorm = WT / WTsum;
       ESS(k) = (double)(1 / (WTnorm.dot(WTnorm)));
 
+      JJ.conservativeResize(JJ.size() + 1);
+      const int lenJJ = JJ.size();
+      JJ(lenJJ - 1) = k;
+      
       if(ESS(k) < thresh && k < K[n - Dim - 1]) {
         std::vector<size_t> N_sons(N, 0);
         const std::vector<Real> dist = Vcumsum<Real>(N * WTnorm);
@@ -813,14 +821,6 @@ GFI gfilmm_(const Eigen::Matrix<Real, Eigen::Dynamic, 1>& L,
           }
           N_sons[j] += 1;
         }
-        std::vector<int> zero2k_ = zero2n<int>(k + 1);
-        const Eigen::VectorXi zero2k =
-            Eigen::Map<Eigen::VectorXi, Eigen::Unaligned>(zero2k_.data(),
-                                                          k + 1);
-        Eigen::VectorXi JJ0(k + 1 + Dim);
-        JJ0 << zero2k, K_start;
-        const Eigen::VectorXi JJ = cppunique(JJ0);
-        const int lenJJ = JJ.size();
         Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> REJJ(lenJJ,
                                                                  Esum(re - 1));
         for(int jj = 0; jj < lenJJ; jj++) {

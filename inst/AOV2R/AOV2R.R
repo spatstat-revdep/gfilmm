@@ -84,7 +84,7 @@ confintAOV2R <- function(dat, alpha = 0.05) {
 
 
 set.seed(3141)
-dat <- SimAOV2R(6, 6, 3)
+dat <- SimAOV2R(4, 3, 2)
 confintAOV2R(dat)
 
 library(rstanarm)
@@ -97,11 +97,12 @@ tail(posterior_interval(rsa, prob = 0.95))
 
 library(gfilmm)
 library(doParallel)
-cl <- makePSOCKcluster(2)
+cl <- makePSOCKcluster(3L)
 registerDoParallel(cl)
-gfs <- foreach(i = 2:3, .combine=list, .export = "gfilmm") %dopar% 
-  gfilmm(~ cbind(y-0.01, y+0.01), ~ 1, ~ Part*Operator, data = dat, N = 2000*i)
+gfs <- foreach(i = c(3L,4L,5L), .combine=list, .multicombine = TRUE, .export = "gfilmm") %dopar% 
+  gfilmm(~ cbind(y-0.01, y+0.01), ~ 1, ~ Part+Operator, data = dat, N = 10000*i, long = FALSE)
 stopCluster(cl)
 lapply(gfs, gfiSummary)
+
 
 

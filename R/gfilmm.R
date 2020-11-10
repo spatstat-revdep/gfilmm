@@ -78,7 +78,7 @@ gfilmm <- function(
   tlabs <- head(names(RE2), -1L)
   Z <- getZ(RE2) 
   E <- vapply(RE2, nlevels, integer(1L))
-  RE2 <- vapply(RE2, recode, integer(n))
+  RE2 <- vapply(RE2, recode, integer(n))#vapply(RE2, as.integer, integer(n)) - 1L # recode
   gfi <- if(long){
     gfilmm_long(yl, yu, FE, Z, RE2, E, N, thresh, seed)
   }else{

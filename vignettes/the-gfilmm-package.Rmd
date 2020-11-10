@@ -252,7 +252,7 @@ lapply(gfs, gfiSummary)
 
 We find similar results, so `N = 20000L` should be enough.
 
-#### Note 
+### Note 
 
 Never combine the fiducial simulations of two different runs. That makes no 
 sense.
@@ -264,7 +264,8 @@ fiducial 95%-confidence intervals for two different designs of a one-way ANOVA
 model with a random factor: the first one with three groups and two replicates 
 per group (3x2 design), and the second one with six groups and three replicates
 per group (6x3 design). I compared with the frequentist confidence intervals 
-calculated by the 'AOV1R' package. These ones are theoretically exact.
+calculated by the 'AOV1R' package. These ones are theoretically exact, except 
+the one about the between standard deviation.
 
 ### 3x2 design
 

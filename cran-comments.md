@@ -1,7 +1,9 @@
 ## Release summary
 
-This is a resubmission. Some tests with the previous submission failed. I have 
-fixed these tests.
+With the previous version, the CRAN checks returned an error on systems using 
+the 'clang' compiler. This is because 'clang' has no support for the 'float128' 
+numbers of the C++ Boost library. So I've removed the possibility to use these 
+numbers.
 
 ## Test environments
 

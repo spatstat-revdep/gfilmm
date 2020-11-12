@@ -19,7 +19,7 @@
 #' @return A list with two components: a dataframe \code{VERTEX}, and a vector 
 #'   \code{WEIGHT}. It has class \code{gfilmm}.
 #' 
-#' @importFrom stats model.matrix terms.formula
+#' @importFrom stats model.matrix terms.formula as.formula
 #' @importFrom utils head
 #' @importFrom rgr gx.sort.df
 #' @export

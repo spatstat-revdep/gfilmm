@@ -3,7 +3,7 @@
 **Simulation of the generalized fiducial distribution for normal linear mixed 
 models with interval data.**
 
-![](https://raw.githubusercontent.com/stla/gfilmm/master/vignettes/intervals_within_6x3.png)
+___
 
 - To install the CRAN version:
 
@@ -23,3 +23,7 @@ quadruple precision:
 ```r
 remotes::install_github("stla/gfilmm@mp")
 ```
+
+___
+
+![](https://raw.githubusercontent.com/stla/gfilmm/master/vignettes/intervals_within_6x3.png)

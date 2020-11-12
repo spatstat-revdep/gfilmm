@@ -1,6 +1,5 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^README\.md$
 ^inst/essais$
 ^inst/simulations$
 ^inst/stan$

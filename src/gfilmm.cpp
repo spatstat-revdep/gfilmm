@@ -452,6 +452,7 @@ GFI gfilmm_(
     const double thresh,
     const unsigned seed) {
   std::default_random_engine generator(seed);
+
   Eigen::Matrix<Real, Eigen::Dynamic, 1> WTnorm(N);  // output:weights
   const size_t n = L.size();
   const size_t fe = FE.cols();  // si FE=NULL, passer une matrice n x 0
@@ -598,7 +599,6 @@ GFI gfilmm_(
         Eigen::Matrix<Real, Eigen::Dynamic, 1> Z1(Dimm1);
         Z1 << FE.row(k).transpose(), Z1t;
         Eigen::Matrix<Real, Eigen::Dynamic, 1> VTsum = VT1.transpose() * Z1;
-
         const std::vector<Real> sample =
             fidSample<Real>(VT2, VTsum, L.coeff(k), U.coeff(k), generator);
 
@@ -939,19 +939,16 @@ GFI gfilmm_(
                   Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> MAT(
                       lenJJ, ((int)Dim) - 1 + ncolsCO2);
                   MAT << -XXX, CO2;
-                  const Eigen::FullPivLU<Eigen::Matrix<
-                      Real, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
+                  const Eigen::FullPivLU<
+                      Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic>>
                       lu(MAT);
                   const int rk = lu.rank();
                   if(rk < MAT.cols()) {
-                    const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic,
-                                        Eigen::RowMajor>
+                    const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic>
                         NUL = lu.kernel();
-                    const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic,
-                                        Eigen::RowMajor>
+                    const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic>
                         n1 = NUL.topRows(NUL.rows() - ncolsCO2);
-                    const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic,
-                                        Eigen::RowMajor>
+                    const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic>
                         n2 = NUL.bottomRows(ncolsCO2);
                     const std::vector<
                         Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic>>
@@ -1110,9 +1107,7 @@ GFI gfilmm_(
         const int lenZ1 = Z1.size();
         const int ncolsCO2 = lengths_nn[kk];
         const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> CO2 =
-            RE.block(
-                0, Esum(kk) - E(kk), n,
-                ncolsCO2);  // RE.rightCols(ncolsCO2 - Esum(kk) + E(kk) + 1);
+            RE.block(0, Esum(kk) - E(kk), n, ncolsCO2);
         Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> XXX(n, Dimm1);
         if(fe > 0) {
           XXX << FE, XX;
@@ -1122,20 +1117,17 @@ GFI gfilmm_(
         Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> MAT(
             n, Dimm1 + ncolsCO2);
         MAT << -XXX, CO2;
-        const Eigen::FullPivLU<Eigen::Matrix<Real, Eigen::Dynamic,
-                                             Eigen::Dynamic, Eigen::RowMajor>>
+        const Eigen::FullPivLU<
+            Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic>>
             lu(MAT);
         const int rk = lu.rank();
         if(rk < MAT.cols()) {
-          const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic,
-                              Eigen::RowMajor>
-              NUL = lu.kernel();
-          const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic,
-                              Eigen::RowMajor>
-              n1 = NUL.topRows(NUL.rows() - ncolsCO2);
-          const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic,
-                              Eigen::RowMajor>
-              n2 = NUL.bottomRows(ncolsCO2);
+          const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> NUL =
+              lu.kernel();
+          const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> n1 =
+              NUL.topRows(NUL.rows() - ncolsCO2);
+          const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> n2 =
+              NUL.bottomRows(ncolsCO2);
           const std::vector<Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic>>
               QR = QRdecomp<Real>(n2);
           const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> O2 = QR[0];

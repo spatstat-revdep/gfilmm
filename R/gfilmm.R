@@ -84,7 +84,7 @@ gfilmm <- function(
   RE2 <- getRE2(data, random, check = TRUE)
   tlabs <- head(names(RE2), -1L)
   Z <- getZ(RE2) 
-  ij <- which(Z == 0, arr.ind = TRUE)
+  ij <- which(Z == 1L, arr.ind = TRUE)
   Z <- sparseMatrix(i = ij[,1L], j = ij[,2L], dims = dim(Z), x = 1.0)
   E <- vapply(RE2, nlevels, integer(1L))
   RE2 <- vapply(RE2, recode, integer(n))#vapply(RE2, as.integer, integer(n)) - 1L # recode

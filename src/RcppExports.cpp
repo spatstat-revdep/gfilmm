@@ -7,15 +7,15 @@
 using namespace Rcpp;
 
 // gfilmm_double
-Rcpp::List gfilmm_double(const Eigen::VectorXd& L, const Eigen::VectorXd& U, const Eigen::MatrixXd& FE, const Eigen::MappedSparseMatrix<double>& RE, const Eigen::MatrixXi& RE2, const Rcpp::IntegerVector E, const size_t N, const double thresh, const unsigned seed);
+Rcpp::List gfilmm_double(const Eigen::VectorXd& L, const Eigen::VectorXd& U, const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>& FE, const Eigen::SparseMatrix<double>& RE, const Eigen::MatrixXi& RE2, const Rcpp::IntegerVector E, const size_t N, const double thresh, const unsigned seed);
 RcppExport SEXP _gfilmm_gfilmm_double(SEXP LSEXP, SEXP USEXP, SEXP FESEXP, SEXP RESEXP, SEXP RE2SEXP, SEXP ESEXP, SEXP NSEXP, SEXP threshSEXP, SEXP seedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type L(LSEXP);
     Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type U(USEXP);
-    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type FE(FESEXP);
-    Rcpp::traits::input_parameter< const Eigen::MappedSparseMatrix<double>& >::type RE(RESEXP);
+    Rcpp::traits::input_parameter< const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>& >::type FE(FESEXP);
+    Rcpp::traits::input_parameter< const Eigen::SparseMatrix<double>& >::type RE(RESEXP);
     Rcpp::traits::input_parameter< const Eigen::MatrixXi& >::type RE2(RE2SEXP);
     Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type E(ESEXP);
     Rcpp::traits::input_parameter< const size_t >::type N(NSEXP);
@@ -25,9 +25,29 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// gfilmm_long
+Rcpp::List gfilmm_long(const Eigen::VectorXd& L, const Eigen::VectorXd& U, const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>& FE, const Eigen::SparseMatrix<double>& RE, const Eigen::MatrixXi& RE2, const Rcpp::IntegerVector E, const size_t N, const double thresh, const unsigned seed);
+RcppExport SEXP _gfilmm_gfilmm_long(SEXP LSEXP, SEXP USEXP, SEXP FESEXP, SEXP RESEXP, SEXP RE2SEXP, SEXP ESEXP, SEXP NSEXP, SEXP threshSEXP, SEXP seedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type L(LSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type U(USEXP);
+    Rcpp::traits::input_parameter< const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>& >::type FE(FESEXP);
+    Rcpp::traits::input_parameter< const Eigen::SparseMatrix<double>& >::type RE(RESEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXi& >::type RE2(RE2SEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type E(ESEXP);
+    Rcpp::traits::input_parameter< const size_t >::type N(NSEXP);
+    Rcpp::traits::input_parameter< const double >::type thresh(threshSEXP);
+    Rcpp::traits::input_parameter< const unsigned >::type seed(seedSEXP);
+    rcpp_result_gen = Rcpp::wrap(gfilmm_long(L, U, FE, RE, RE2, E, N, thresh, seed));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_gfilmm_gfilmm_double", (DL_FUNC) &_gfilmm_gfilmm_double, 9},
+    {"_gfilmm_gfilmm_long", (DL_FUNC) &_gfilmm_gfilmm_long, 9},
     {NULL, NULL, 0}
 };
 

@@ -1,5 +1,4 @@
-// -*- mode: C++; c-indent-level: 2; c-basic-offset: 2; indent-tabs-mode: nil;
-// -*-
+// -*- mode: C++; c-indent-level: 2; c-basic-offset: 2; indent-tabs-mode: nil; -*-
 
 // we only include RcppEigen.h which pulls Rcpp.h in for us
 #include <RcppEigen.h>
@@ -439,7 +438,7 @@ template <typename Real>
 GFI gfilmm_(const Eigen::Matrix<Real, Eigen::Dynamic, 1>& L,
             const Eigen::Matrix<Real, Eigen::Dynamic, 1>& U,
             const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic>& FE,
-            const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic>& RE,
+            const Eigen::MappedSparseMatrix<Real>& RE,
             const Eigen::MatrixXi& RE2,
             const Rcpp::IntegerVector E,
             const size_t N,
@@ -821,8 +820,7 @@ GFI gfilmm_(const Eigen::Matrix<Real, Eigen::Dynamic, 1>& L,
           }
           N_sons[j] += 1;
         }
-        Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> REJJ(lenJJ,
-                                                                 Esum(re - 1));
+        Eigen::SparseMatrix<Real, Eigen::RowMajor> REJJ(lenJJ, Esum(re - 1));
         for(int jj = 0; jj < lenJJ; jj++) {
           REJJ.row(jj) = RE.row(JJ.coeff(jj));
         }
@@ -882,7 +880,7 @@ GFI gfilmm_(const Eigen::Matrix<Real, Eigen::Dynamic, 1>& L,
                   for(int jj = 0; jj < vv.size(); jj++) {
                     Z1_(jj) = Ztemp[kk].coeff(vv(jj), ii);
                   }
-                  const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic>
+                  const Eigen::SparseMatrix<Real>
                       CO2_ = REJJ.block(0, Esum(kk) - E(kk), lenJJ, E(kk));
                   std::vector<int> pcolsums;
                   for(int jj = 0; jj < E(kk); jj++) {
@@ -1082,7 +1080,7 @@ GFI gfilmm_(const Eigen::Matrix<Real, Eigen::Dynamic, 1>& L,
         const int lenZ1 = Z1.size();
         const int ncolsCO2 = lengths_nn[kk];
         const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> CO2 =
-            RE.block(0, Esum(kk) - E(kk), n, ncolsCO2);
+          RE.block(0, Esum(kk) - E(kk), n, ncolsCO2);//RE.rightCols(ncolsCO2 - Esum(kk) + E(kk) + 1);
         Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> XXX(n, Dimm1);
         if(fe > 0) {
           XXX << FE, XX;
@@ -1207,7 +1205,7 @@ Eigen::Matrix<long double, Eigen::Dynamic, 1> d2lVector(Eigen::VectorXd V) {
 Rcpp::List gfilmm_double(const Eigen::VectorXd& L,
                          const Eigen::VectorXd& U,
                          const Eigen::MatrixXd& FE,
-                         const Eigen::MatrixXd& RE,
+                         const Eigen::MappedSparseMatrix<double>& RE,
                          const Eigen::MatrixXi& RE2,
                          const Rcpp::IntegerVector E,
                          const size_t N,
@@ -1221,21 +1219,22 @@ Rcpp::List gfilmm_double(const Eigen::VectorXd& L,
   return out;
 }
 
-// [[Rcpp::export]]
+/* // [[Rcpp::export]]
 Rcpp::List gfilmm_long(const Eigen::VectorXd& L,
                        const Eigen::VectorXd& U,
                        const Eigen::MatrixXd& FE,
-                       const Eigen::MatrixXd& RE,
+                       const Eigen::MappedSparseMatrix<double>& RE,
                        const Eigen::MatrixXi& RE2,
                        const Rcpp::IntegerVector E,
                        const size_t N,
                        const double thresh, 
                        const unsigned seed) {
   const GFI gfi = gfilmm_<long double>(d2lVector(L), d2lVector(U), d2l(FE),
-                                       d2l(RE), RE2, E, N, thresh, seed);
+                                       RE.cast<long double>(), RE2, E, N, 
+                                       thresh, seed);
 
   Rcpp::List out = Rcpp::List::create(Rcpp::Named("VERTEX") = gfi.vertices,
                                       Rcpp::Named("WEIGHT") = gfi.weights);
   out.attr("ESS") = gfi.ess;
   return out;
-}
+                       } */

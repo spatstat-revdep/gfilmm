@@ -454,7 +454,12 @@ GFI gfilmm_(
     const double thresh,
     const unsigned seed) {
   std::default_random_engine generator(seed);
-
+  std::default_random_engine generator1(1);
+  std::default_random_engine generator2(10000);
+  std::default_random_engine generator3(20000);
+  std::default_random_engine generator4(30000);
+  std::vector<std::default_random_engine> generators = 
+    {generator1, generator2, generator3, generator4};
   Eigen::Matrix<Real, Eigen::Dynamic, 1> WTnorm(N);  // output:weights
   const size_t n = L.size();
   const size_t fe = FE.cols();  // si FE=NULL, passer une matrice n x 0
@@ -602,9 +607,8 @@ GFI gfilmm_(
         Eigen::Matrix<Real, Eigen::Dynamic, 1> Z1(Dimm1);
         Z1 << FE.row(k).transpose(), Z1t;
         Eigen::Matrix<Real, Eigen::Dynamic, 1> VTsum = VT1.transpose() * Z1;
-        const std::vector<Real> sample =
-            fidSample<Real>(VT2, VTsum, L.coeff(k), U.coeff(k), generator);
-
+        std::vector<Real> sample = 
+          fidSample<Real>(VT2, VTsum, L.coeff(k), U.coeff(k), generators[omp_get_thread_num()]);
         const Real ZZ = sample[0];
         const Real wt = sample[1];
         Z[re - 1](k, i) = ZZ;
@@ -854,8 +858,13 @@ GFI gfilmm_(
           }
         }
         std::vector<Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic>> ZZ(re);
+        std::vector<size_t> Nsons_sum(N);
+        Nsons_sum[0] = 0;
+        for(size_t i = 1; i < N; i++) {
+          Nsons_sum[i] = Nsons_sum[i-1] + N_sons[i-1];
+        }
         for(size_t ii = 0; ii < re; ii++) {
-          ZZ[ii].resize(E(ii), 0);
+          ZZ[ii].resize(E(ii), Nsons_sum[N-1] + N_sons[N-1]);
         }
         std::vector<size_t> VCVC(N, 0);
         std::vector<Eigen::MatrixXi> CCCC(N);
@@ -883,7 +892,7 @@ GFI gfilmm_(
               }
             }
             if(copy) {
-              const std::vector<size_t> ord = sample_int(re, generator);
+              const std::vector<size_t> ord = sample_int(re, generators[omp_get_thread_num()]);
               for(size_t j = 0; j < re; j++) {
                 const size_t kk = ord[j];
                 for(size_t ii = 0; ii < copy; ii++) {
@@ -972,11 +981,11 @@ GFI gfilmm_(
                     const Real b = sqrt(tau_.dot(tau_));
                     const Eigen::Matrix<Real, Eigen::Dynamic, 1> tau = tau_ / b;
                     const Real bb =
-                        sqrt(rchisq<Real>(lenZ1 - rankO2, generator));
+                        sqrt(rchisq<Real>(lenZ1 - rankO2, generators[omp_get_thread_num()]));
                     const Real bbb = b / bb;
                     Eigen::Matrix<Real, Eigen::Dynamic, 1> aa(rankO2);
                     for(int jj = 0; jj < rankO2; jj++) {
-                      aa(jj) = (Real)(gaussian(generator));
+                      aa(jj) = (Real)(gaussian(generators[omp_get_thread_num()]));
                     }
                     const Eigen::Matrix<Real, Eigen::Dynamic, 1> O2aa = O2 * aa;
                     const Eigen::Matrix<Real, Eigen::Dynamic, 1> bbtau =
@@ -1008,7 +1017,7 @@ GFI gfilmm_(
                   } else {
                     const Real b = sqrt(Z1.dot(Z1));
                     const Eigen::Matrix<Real, Eigen::Dynamic, 1> tau = Z1 / b;
-                    const Real bb = sqrt(rchisq<Real>(lenZ1, generator));
+                    const Real bb = sqrt(rchisq<Real>(lenZ1, generators[omp_get_thread_num()]));
                     for(size_t jj = 0; jj < lenZ1; jj++) {
                       Ztemp[kk](Z00[jj], ii) = bb * tau.coeff(jj);
                     }
@@ -1017,14 +1026,15 @@ GFI gfilmm_(
                 }
               }
             }
-#pragma omp critical
-{
+//#pragma omp critical
+//{
             for(size_t ii = 0; ii < re; ii++) {
-              ZZ[ii].conservativeResize(Eigen::NoChange,
-                                        ZZ[ii].cols() + (int)Nsons_i);
-              ZZ[ii].rightCols(Nsons_i) = Ztemp[ii];
+//              ZZ[ii].conservativeResize(Eigen::NoChange,
+//                                        ZZ[ii].cols() + (int)Nsons_i);
+//              ZZ[ii].rightCols(Nsons_i) = Ztemp[ii];
+              ZZ[ii].block(0, Nsons_sum[i], E(ii), Nsons_i) = Ztemp[ii];
             }
-}
+//}
             size_t d = 0;
             for(size_t ii = 0; ii < i; ii++) {
               d += N_sons[ii];
@@ -1085,7 +1095,7 @@ GFI gfilmm_(
       }
       nn[ii] = cppunique(vec);
       lengths_nn[ii] = nn[ii].size();
-      ZZ[ii].resize(lengths_nn[ii], 0);
+      ZZ[ii].resize(lengths_nn[ii], N);
     }
 
 #pragma omp parallel for num_threads(4)
@@ -1099,7 +1109,7 @@ GFI gfilmm_(
           Ztemp[ii](iii) = Z[ii].coeff(nn[ii].coeff(iii), i);
         }
       }
-      const std::vector<size_t> ord = sample_int(re, generator);
+      const std::vector<size_t> ord = sample_int(re, generators[omp_get_thread_num()]);
       for(size_t j = 0; j < re; j++) {
         const size_t kk = ord[j];
         Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> XX(n, 0);
@@ -1148,11 +1158,11 @@ GFI gfilmm_(
           const Eigen::Matrix<Real, Eigen::Dynamic, 1> tau_ = Z1 - O2a;
           const Real b = sqrt(tau_.dot(tau_));
           const Eigen::Matrix<Real, Eigen::Dynamic, 1> tau = tau_ / b;
-          const Real bb = sqrt(rchisq<Real>(lenZ1 - rankO2, generator));
+          const Real bb = sqrt(rchisq<Real>(lenZ1 - rankO2, generators[omp_get_thread_num()]));
           const Real bbb = b / bb;
           Eigen::Matrix<Real, Eigen::Dynamic, 1> aa(rankO2);
           for(int jj = 0; jj < rankO2; jj++) {
-            aa(jj) = (Real)(gaussian(generator));
+            aa(jj) = (Real)(gaussian(generators[omp_get_thread_num()]));
           }
           const Eigen::Matrix<Real, Eigen::Dynamic, 1> O2aa = O2 * aa;
           const Eigen::Matrix<Real, Eigen::Dynamic, 1> bbtau = bb * tau;
@@ -1172,18 +1182,19 @@ GFI gfilmm_(
         } else {
           const Real b = sqrt(Z1.dot(Z1));
           const Eigen::Matrix<Real, Eigen::Dynamic, 1> tau = Z1 / b;
-          const Real bb = sqrt(rchisq<Real>(lenZ1, generator));
+          const Real bb = sqrt(rchisq<Real>(lenZ1, generators[omp_get_thread_num()]));
           Ztemp[kk] = bb * tau;
           VTtemp.row(fe + kk) *= b / bb;
         }
       }
-#pragma omp critical
-{
+//#pragma omp critical
+//{
       for(size_t ii = 0; ii < re; ii++) {
-        ZZ[ii].conservativeResize(Eigen::NoChange, ZZ[ii].cols() + 1);
-        ZZ[ii].rightCols(1) = Ztemp[ii];
+        //ZZ[ii].conservativeResize(Eigen::NoChange, ZZ[ii].cols() + 1);
+        //ZZ[ii].rightCols(1) = Ztemp[ii];
+        ZZ[ii].col(i) = Ztemp[ii];
       }
-}
+//}
       VTVT[i] = VTtemp;
     }
 

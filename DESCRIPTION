@@ -34,8 +34,7 @@ Suggests:
     testthat,
     AOV1R,
     GGally,
-    car,
-    doParallel
+    car
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.1.1
 Encoding: UTF-8

@@ -487,13 +487,20 @@ GFI gfilmm_(
   std::vector<
       Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
       A(N);
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(nthreads)
+#endif
   for(size_t k = 0; k < N; k++) {
     A[k].resize(n, re);
   }
+  
   for(size_t j = 0; j < re; j++) {
     Z[j] = gmatrix<Real>(E(j), N, generator);
     const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> M =
         RE.block(0, Esum(j) - E(j), n, E(j)) * Z[j];
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(nthreads)
+#endif
     for(size_t k = 0; k < N; k++) {
       for(size_t i = 0; i < n; i++) {
         A[k](i, j) = M.coeff(i, k);
@@ -525,8 +532,12 @@ GFI gfilmm_(
       Eigen::Map<Eigen::VectorXi, Eigen::Unaligned>(C.data(), Dim);
 
   for(size_t i = 0; i < n - Dim; i++) {
+    const int K_i = K[i];
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(nthreads)
+#endif
     for(size_t j = 0; j < N; j++) {
-      Z[re - 1](K[i], j) = 0.0;
+      Z[re - 1](K_i, j) = 0.0;
     }
   }
 
@@ -541,6 +552,9 @@ GFI gfilmm_(
       2 * n, fe);
   FEFE << FE, -FE;
 
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(nthreads)
+#endif
   for(size_t k = 0; k < N; k++) {
     Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> V(
         Dim, twoPowerDim);
@@ -563,6 +577,7 @@ GFI gfilmm_(
     }
     VT[k] = V;
   }
+  
   std::vector<size_t> VC(N, twoPowerDim);  // number of vertices
 
   //-------- MAIN ALGORITHM ----------------------------------------------------
@@ -822,6 +837,9 @@ GFI gfilmm_(
       }
 
       Eigen::Matrix<Real, Eigen::Dynamic, 1> WT(N);
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(nthreads)
+#endif
       for(size_t j = 0; j < N; j++) {
         WT(j) = weight.col(j).prod();
       }
@@ -1079,6 +1097,9 @@ GFI gfilmm_(
 
     //------------determine signs ----------------------------------------------
     Eigen::MatrixXi signs = Eigen::MatrixXi::Zero(re, N);
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(nthreads)
+#endif
     for(size_t i = 0; i < N; i++) {
       const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
           VTi = VT[i];
@@ -1229,6 +1250,9 @@ GFI gfilmm_(
     VT = VTVT;
 
     //---------flip negatives --------------------------------------------------
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(nthreads)
+#endif
     for(size_t i = 0; i < N; i++) {
       for(size_t j = 0; j < re; j++) {
         if(signs(j, i) == -1) {
@@ -1250,7 +1274,7 @@ GFI gfilmm_(
   out.vertices = VERTEX;
   out.ess = ESS;
 
-  for(auto j = 0; j < N; j++) {
+  for(auto j = 0; j < N; j++) { // TODO: cast
     out.weights(j) = (double)WTnorm.coeff(j);
   }
 

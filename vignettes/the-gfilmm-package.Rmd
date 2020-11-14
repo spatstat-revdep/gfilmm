@@ -186,7 +186,7 @@ dat        <- data.frame(
 We run the fiducial sampler:
 
 ```{r gfilmm_AOV1R}
-fidSims <- gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = 20000L)
+fidSims <- gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = 30000L)
 ```
 
 Observe that the between standard deviation `sigma_group` has a positive value 
@@ -234,23 +234,17 @@ gfiConfInt(~ sqrt(sigma_group^2 + sigma_error^2)/`(Intercept)`, fidSims)
 
 This is a good question. Unfortunately I have no clue about the answer. A good 
 practice consists in running several fiducial samplers and to check whether the 
-results change. Since we have already tried 20000 simulations, let us try with 
-30000 and 40000:
+results change. Since we have already tried 30000 simulations, let us try with 
+40000 and 50000:
 
 ```{r parallel}
-library(doParallel)
-cl <- makePSOCKcluster(2L)
-registerDoParallel(cl)
-
-gfs <- foreach(i = c(3L, 4L), .combine = list, .export = "gfilmm") %dopar% 
-  gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = i * 10000L)
-
-stopCluster(cl)
-
+gfs <- lapply(c(40000L, 50000L), function(N){
+  gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = N)  
+})
 lapply(gfs, gfiSummary)
 ```
 
-We find similar results, so `N = 20000L` should be enough.
+We find similar results, so `N = 30000L` should be enough.
 
 ### Note 
 

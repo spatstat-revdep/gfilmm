@@ -5,7 +5,17 @@
 \alias{print.gfilmm}
 \title{Generalized fiducial inference}
 \usage{
-gfilmm(y, fixed, random, data, N, thresh = N/2, long = FALSE, seed = NULL)
+gfilmm(
+  y,
+  fixed,
+  random,
+  data,
+  N,
+  thresh = N/2,
+  long = FALSE,
+  seed = NULL,
+  nthreads = parallel::detectCores()
+)
 
 \method{print}{gfilmm}(x, ...)
 }
@@ -29,6 +39,9 @@ algorithm}
 
 \item{seed}{the seed for the C++ random numbers generator, a positive 
 integer, or \code{NULL} to use a random seed}
+
+\item{nthreads}{number of threads to run the algorithm with parallelized 
+blocks of code}
 
 \item{x}{a \code{gfilmm} object}
 

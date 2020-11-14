@@ -13,6 +13,8 @@
 #'   algorithm
 #' @param seed the seed for the C++ random numbers generator, a positive 
 #'   integer, or \code{NULL} to use a random seed 
+#' @param nthreads number of threads to run the algorithm with parallelized 
+#'   blocks of code
 #' @param x a \code{gfilmm} object
 #' @param ... ignored
 #'
@@ -41,10 +43,12 @@
 #' kfit <- kde1d(gfi$VERTEX[["(Intercept)"]], weights = gfi$WEIGHT)
 #' curve(dkde1d(x, kfit), from = 45, to = 65)
 gfilmm <- function(
-  y, fixed, random, data, N, thresh=N/2, long=FALSE, seed = NULL
+  y, fixed, random, data, 
+  N, thresh = N/2, long = FALSE, seed = NULL, 
+  nthreads = parallel::detectCores()
 ){
   seed <- if(is.null(seed)){
-    sample.int(.Machine$integer.max, 1L)
+    sample.int(1000000L, 1L)
   }else{
     as.integer(abs(seed))
   }
@@ -89,9 +93,9 @@ gfilmm <- function(
   E <- vapply(RE2, nlevels, integer(1L))
   RE2 <- vapply(RE2, recode, integer(n))#vapply(RE2, as.integer, integer(n)) - 1L # recode
   gfi <- if(long){
-    gfilmm_long(yl, yu, FE, Z, RE2, E, N, thresh, seed)
+    gfilmm_long(yl, yu, FE, Z, RE2, E, N, thresh, seed, nthreads)
   }else{
-    gfilmm_double(yl, yu, FE, Z, RE2, E, N, thresh, seed)
+    gfilmm_double(yl, yu, FE, Z, RE2, E, N, thresh, seed, nthreads)
   }
   rownames(gfi[["VERTEX"]]) <-
     c(colnames(FE), paste0("sigma_", c(tlabs, "error")))

@@ -69,7 +69,7 @@ fidSims <- gfilmm(
   fixed = ~ x,             # fixed effects
   random = NULL,           # random effects
   data = dat,              # data
-  N = 20000L               # number of simulations
+  N = 30000L               # number of simulations
 )
 ```
 

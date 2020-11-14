@@ -7,8 +7,8 @@
 using namespace Rcpp;
 
 // gfilmm_double
-Rcpp::List gfilmm_double(const Eigen::VectorXd& L, const Eigen::VectorXd& U, const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>& FE, const Eigen::SparseMatrix<double>& RE, const Eigen::MatrixXi& RE2, const Rcpp::IntegerVector E, const size_t N, const double thresh, const unsigned seed);
-RcppExport SEXP _gfilmm_gfilmm_double(SEXP LSEXP, SEXP USEXP, SEXP FESEXP, SEXP RESEXP, SEXP RE2SEXP, SEXP ESEXP, SEXP NSEXP, SEXP threshSEXP, SEXP seedSEXP) {
+Rcpp::List gfilmm_double(const Eigen::VectorXd& L, const Eigen::VectorXd& U, const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>& FE, const Eigen::SparseMatrix<double>& RE, const Eigen::MatrixXi& RE2, const Rcpp::IntegerVector E, const size_t N, const double thresh, const unsigned seed, const unsigned nthreads);
+RcppExport SEXP _gfilmm_gfilmm_double(SEXP LSEXP, SEXP USEXP, SEXP FESEXP, SEXP RESEXP, SEXP RE2SEXP, SEXP ESEXP, SEXP NSEXP, SEXP threshSEXP, SEXP seedSEXP, SEXP nthreadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -21,13 +21,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const size_t >::type N(NSEXP);
     Rcpp::traits::input_parameter< const double >::type thresh(threshSEXP);
     Rcpp::traits::input_parameter< const unsigned >::type seed(seedSEXP);
-    rcpp_result_gen = Rcpp::wrap(gfilmm_double(L, U, FE, RE, RE2, E, N, thresh, seed));
+    Rcpp::traits::input_parameter< const unsigned >::type nthreads(nthreadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(gfilmm_double(L, U, FE, RE, RE2, E, N, thresh, seed, nthreads));
     return rcpp_result_gen;
 END_RCPP
 }
 // gfilmm_long
-Rcpp::List gfilmm_long(const Eigen::VectorXd& L, const Eigen::VectorXd& U, const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>& FE, const Eigen::SparseMatrix<double>& RE, const Eigen::MatrixXi& RE2, const Rcpp::IntegerVector E, const size_t N, const double thresh, const unsigned seed);
-RcppExport SEXP _gfilmm_gfilmm_long(SEXP LSEXP, SEXP USEXP, SEXP FESEXP, SEXP RESEXP, SEXP RE2SEXP, SEXP ESEXP, SEXP NSEXP, SEXP threshSEXP, SEXP seedSEXP) {
+Rcpp::List gfilmm_long(const Eigen::VectorXd& L, const Eigen::VectorXd& U, const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>& FE, const Eigen::SparseMatrix<double>& RE, const Eigen::MatrixXi& RE2, const Rcpp::IntegerVector E, const size_t N, const double thresh, const unsigned seed, const unsigned nthreads);
+RcppExport SEXP _gfilmm_gfilmm_long(SEXP LSEXP, SEXP USEXP, SEXP FESEXP, SEXP RESEXP, SEXP RE2SEXP, SEXP ESEXP, SEXP NSEXP, SEXP threshSEXP, SEXP seedSEXP, SEXP nthreadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -40,14 +41,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const size_t >::type N(NSEXP);
     Rcpp::traits::input_parameter< const double >::type thresh(threshSEXP);
     Rcpp::traits::input_parameter< const unsigned >::type seed(seedSEXP);
-    rcpp_result_gen = Rcpp::wrap(gfilmm_long(L, U, FE, RE, RE2, E, N, thresh, seed));
+    Rcpp::traits::input_parameter< const unsigned >::type nthreads(nthreadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(gfilmm_long(L, U, FE, RE, RE2, E, N, thresh, seed, nthreads));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_gfilmm_gfilmm_double", (DL_FUNC) &_gfilmm_gfilmm_double, 9},
-    {"_gfilmm_gfilmm_long", (DL_FUNC) &_gfilmm_gfilmm_long, 9},
+    {"_gfilmm_gfilmm_double", (DL_FUNC) &_gfilmm_gfilmm_double, 10},
+    {"_gfilmm_gfilmm_long", (DL_FUNC) &_gfilmm_gfilmm_long, 10},
     {NULL, NULL, 0}
 };
 

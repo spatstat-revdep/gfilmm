@@ -4,6 +4,8 @@
 #include <RcppEigen.h>
 #include <random>
 
+#include <omp.h>
+
 // via the depends attribute we tell Rcpp to create hooks for
 // RcppEigen so that the build process will know what to do
 //
@@ -584,6 +586,7 @@ GFI gfilmm_(
         }
       }
 
+#pragma omp parallel for num_threads(4)
       for(size_t i = 0; i < N; i++) {
         const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic,
                             Eigen::RowMajor>
@@ -859,6 +862,7 @@ GFI gfilmm_(
         std::vector<Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic,
                                   Eigen::RowMajor>>
             VTVT(N);
+#pragma omp parallel for num_threads(4)
         for(size_t i = 0; i < N; i++) {
           const size_t Nsons_i = N_sons[i];
           if(Nsons_i) {
@@ -1013,11 +1017,14 @@ GFI gfilmm_(
                 }
               }
             }
+#pragma omp critical
+{
             for(size_t ii = 0; ii < re; ii++) {
               ZZ[ii].conservativeResize(Eigen::NoChange,
                                         ZZ[ii].cols() + (int)Nsons_i);
               ZZ[ii].rightCols(Nsons_i) = Ztemp[ii];
             }
+}
             size_t d = 0;
             for(size_t ii = 0; ii < i; ii++) {
               d += N_sons[ii];
@@ -1081,6 +1088,7 @@ GFI gfilmm_(
       ZZ[ii].resize(lengths_nn[ii], 0);
     }
 
+#pragma omp parallel for num_threads(4)
     for(size_t i = 0; i < N; i++) {
       Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
           VTtemp = VT[i];
@@ -1169,10 +1177,13 @@ GFI gfilmm_(
           VTtemp.row(fe + kk) *= b / bb;
         }
       }
+#pragma omp critical
+{
       for(size_t ii = 0; ii < re; ii++) {
         ZZ[ii].conservativeResize(Eigen::NoChange, ZZ[ii].cols() + 1);
         ZZ[ii].rightCols(1) = Ztemp[ii];
       }
+}
       VTVT[i] = VTtemp;
     }
 

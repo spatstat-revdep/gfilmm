@@ -114,7 +114,7 @@ of the fiducial distribution by picking the fiducial simulations at random
 according to their weight:
 
 ```{r scatterplot}
-indcs <- sample.int(20000L, replace = TRUE, prob = fidSims$WEIGHT)
+indcs <- sample.int(30000L, replace = TRUE, prob = fidSims$WEIGHT)
 pseudoSims <- fidSims$VERTEX[indcs,]
 library(GGally)
 ggpairs(

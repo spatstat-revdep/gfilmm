@@ -493,7 +493,7 @@ GFI gfilmm_(
   for(size_t k = 0; k < N; k++) {
     A[k].resize(n, re);
   }
-  
+
   for(size_t j = 0; j < re; j++) {
     Z[j] = gmatrix<Real>(E(j), N, generator);
     const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> M =
@@ -577,7 +577,7 @@ GFI gfilmm_(
     }
     VT[k] = V;
   }
-  
+
   std::vector<size_t> VC(N, twoPowerDim);  // number of vertices
 
   //-------- MAIN ALGORITHM ----------------------------------------------------
@@ -1062,16 +1062,9 @@ GFI gfilmm_(
                 }
               }
             }
-            //#pragma omp critical
-            //{
             for(size_t ii = 0; ii < re; ii++) {
-              //              ZZ[ii].conservativeResize(Eigen::NoChange,
-              //                                        ZZ[ii].cols() +
-              //                                        (int)Nsons_i);
-              //              ZZ[ii].rightCols(Nsons_i) = Ztemp[ii];
               ZZ[ii].block(0, Nsons_sum[i], E(ii), Nsons_i) = Ztemp[ii];
             }
-            //}
             size_t d = 0;
             for(size_t ii = 0; ii < i; ii++) {
               d += N_sons[ii];
@@ -1235,14 +1228,9 @@ GFI gfilmm_(
           VTtemp.row(fe + kk) *= b / bb;
         }
       }
-      //#pragma omp critical
-      //{
       for(size_t ii = 0; ii < re; ii++) {
-        // ZZ[ii].conservativeResize(Eigen::NoChange, ZZ[ii].cols() + 1);
-        // ZZ[ii].rightCols(1) = Ztemp[ii];
         ZZ[ii].col(i) = Ztemp[ii];
       }
-      //}
       VTVT[i] = VTtemp;
     }
 
@@ -1269,35 +1257,10 @@ GFI gfilmm_(
   }
 
   GFI out;
-  Eigen::VectorXd ow = Eigen::VectorXd::Zero(N);
-  out.weights = ow;
+  out.weights = WTnorm.template cast<double>();
   out.vertices = VERTEX;
   out.ess = ESS;
 
-  for(auto j = 0; j < N; j++) { // TODO: cast
-    out.weights(j) = (double)WTnorm.coeff(j);
-  }
-
-  return out;
-}
-
-Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic> d2l(
-    Eigen::MatrixXd M) {
-  Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic> out(M.rows(),
-                                                                 M.cols());
-  for(auto i = 0; i < M.rows(); i++) {
-    for(auto j = 0; j < M.cols(); j++) {
-      out(i, j) = (long double)M.coeff(i, j);
-    }
-  }
-  return out;
-}
-
-Eigen::Matrix<long double, Eigen::Dynamic, 1> d2lVector(Eigen::VectorXd V) {
-  Eigen::Matrix<long double, Eigen::Dynamic, 1> out(V.rows());
-  for(auto i = 0; i < V.size(); i++) {
-    out(i) = (long double)V.coeff(i);
-  }
   return out;
 }
 
@@ -1334,9 +1297,9 @@ Rcpp::List gfilmm_long(
     const double thresh,
     const unsigned seed,
     const unsigned nthreads) {
-  const GFI gfi = gfilmm_<long double>(d2lVector(L), d2lVector(U), d2l(FE),
-                                       RE.cast<long double>(), RE2, E, N,
-                                       thresh, seed, nthreads);
+  const GFI gfi = gfilmm_<long double>(
+      L.cast<long double>(), U.cast<long double>(), FE.cast<long double>(),
+      RE.cast<long double>(), RE2, E, N, thresh, seed, nthreads);
 
   Rcpp::List out = Rcpp::List::create(Rcpp::Named("VERTEX") = gfi.vertices,
                                       Rcpp::Named("WEIGHT") = gfi.weights);

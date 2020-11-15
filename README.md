@@ -14,14 +14,14 @@ install.packages("gfilmm")
 - To install the development version:
 
 ```r
-remotes::install_github("stla/gfilmm")
+remotes::install_github("stla/gfilmm", build_vignettes = TRUE)
 ```
 
 - To install the development version allowing to run the algorithm in 
 quadruple precision:
 
 ```r
-remotes::install_github("stla/gfilmm@mp")
+remotes::install_github("stla/gfilmm@mp", build_vignettes = TRUE)
 ```
 
 ___

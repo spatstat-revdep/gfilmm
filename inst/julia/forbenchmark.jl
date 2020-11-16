@@ -432,10 +432,15 @@ function gfilmm4(data::Array{R,2}, FE::Array{Float64,2}, RE::Array{Int64,2}, N::
           end
           @inbounds N_sons[j] += 1
         end
-        JJ = union(1:k, K_start)
+        Nsons_sum = zeros(Int64, N+1)
+        for i in 2:(N+1)
+          @inbounds Nsons_sum[i] = Nsons_sum[i-1] + Nsons[i-1]
+        end
+        @inbounds Nsons_totalSum = Nsons_sum[N+1]
+        JJ = union(1:k, K_start) # WRONG !!!
         ZZ = Vector{Array{Float64,2}}(undef, ree)
         for ii in 1:ree
-          @inbounds ZZ[ii] = zeros(Float64, size(Z[ii], 1), 0) # initialisation matrice vide
+          @inbounds ZZ[ii] = zeros(Float64, size(Z[ii], 1), Nsons_totalSum)
         end
         VCVC = zeros(Int64, N)
         CCCC = Vector{Array{Int64,2}}(undef, N)
@@ -512,15 +517,18 @@ function gfilmm4(data::Array{R,2}, FE::Array{Float64,2}, RE::Array{Int64,2}, N::
                   end
                 end
             end
+            for ii in 1:ree
+              @inbounds ZZ[ii][:, (Nsons_sum[i]+1):Nsons_sum[i+1]] = Ztemp[ii]
+            end
             @inbounds VCVC[(sum(N_sons[1:(i-1)])+1):sum(N_sons[1:i])] = VCtemp
-            @inbounds d = sum(N_sons[1:(i-1)])
+            @inbounds d = sum(N_sons[1:(i-1)]) # i in C++! why i-1 here ?
             @inbounds for kk in 1:N_sons[i]
               @inbounds VTVT[kk+d] = VTtemp[kk]
               @inbounds CCCC[kk+d] = CC[i]
             end
           end
         end
-        Z = Ztemp
+        Z = ZZ
         VT = VTVT
         VC = VCVC
         CC = CCCC
@@ -550,7 +558,7 @@ function gfilmm4(data::Array{R,2}, FE::Array{Float64,2}, RE::Array{Int64,2}, N::
     nn = Vector{Vector{Int64}}(undef, ree)
     for ii in 1:ree
       @inbounds nn[ii] = unique(RE2[n1, ii])
-      @inbounds ZZ[ii] = zeros(Float64, length(nn[ii]), 0)
+      @inbounds ZZ[ii] = zeros(Float64, length(nn[ii]), N)
     end
 
     for i in 1:N
@@ -614,7 +622,7 @@ function gfilmm4(data::Array{R,2}, FE::Array{Float64,2}, RE::Array{Int64,2}, N::
         # end
       end
       for ii in 1:ree
-        @inbounds ZZ[ii] = hcat(ZZ[ii], Ztemp[ii])
+        @inbounds ZZ[ii][:,i] = Ztemp[ii]
       end
       @inbounds VTVT[i] = VTtemp
     end

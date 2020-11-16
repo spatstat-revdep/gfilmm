@@ -3,6 +3,7 @@
 S3method(print,gfilmm)
 export(gfiCDF)
 export(gfiConfInt)
+export(gfiQuantile)
 export(gfiSummary)
 export(gfilmm)
 export(gfilmmPredictive)

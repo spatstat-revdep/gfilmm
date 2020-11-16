@@ -109,3 +109,26 @@ gfiCDF <- function(parameter, gfi){
   fsims <- f_eval_rhs(parameter, data = data)
   ewcdf(fsims, weights = gfi[["WEIGHT"]]) 
 }
+
+#' Quantiles of a fiducial distribution 
+#' @description Quantiles of the fiducial distribution of a parameter of 
+#'   interest.
+#'
+#' @param parameter a right-sided formula defining the parameter of interest, 
+#'   like \code{~ sigma_error/`(Intercept)`}
+#' @param gfi a \code{gfilmm} object (output of \code{\link{gfilmm}} or 
+#'   \code{\link{gfilmmPredictive}})
+#' @param probs numeric vector of probabilities
+#'
+#' @return Numeric vector of quantiles, of the same length as \code{probs}.
+#' 
+#' @importFrom spatstat quantile.ewcdf 
+#' @export
+#'
+#' @examples h <- 0.01
+#' gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N=5000)
+#' gfiQuantile(~ sqrt(sigma_block^2 + sigma_error^2), gfi, c(25, 50, 75)/100)
+gfiQuantile <- function(parameter, gfi, probs){
+  cdf <- gfiCDF(parameter, gfi)
+  quantile.ewcdf(cdf, probs = probs)
+}

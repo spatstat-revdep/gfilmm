@@ -1,4 +1,4 @@
-# gfilmm 1.0.1.9000
+# gfilmm 2.0.0
 
 * The main function `gfilmm` now has an option `nthreads`, to run some pieces of code of the algorithm in parallel. 
 * Use of a sparse matrix to reduce memory consumption and to improve the speed.

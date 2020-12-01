@@ -31,6 +31,7 @@ inference <- function(gfi, v, alpha=0.05){
 }
 
 #' Summary of fiducial distributions
+#' @description Summary of the fiducial distributions.
 #'
 #' @param gfi a \code{gfilmm} object (output of \code{\link{gfilmm}} or 
 #'   \code{\link{gfilmmPredictive}})

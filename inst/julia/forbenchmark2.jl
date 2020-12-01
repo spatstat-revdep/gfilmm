@@ -1,4 +1,5 @@
 using LinearAlgebra
+using StaticArrays
 
 function rchi(n)
    return norm(randn(n))
@@ -222,7 +223,8 @@ end
 
 
 #srand(421)
-function gfilmm4(data::Array{R,2}, FE::Array{Float64,2}, RE::Array{Int64,2}, N::Int64, thresh::Float64) where {R<:Real}
+#function gfilmm4(data::Array{R,2}, FE::Array{Float64,2}, RE::Array{Int64,2}, N::Int64, thresh::Float64) where {R<:Real}
+function gfilmm4(data::Array{R,2}, FE, RE, N::Int64, thresh::Float64) where {R<:Real}
 
   local WT, VERTEX, WEIGHT, VTtemp, VCtemp
 
@@ -266,6 +268,9 @@ function gfilmm4(data::Array{R,2}, FE::Array{Float64,2}, RE::Array{Int64,2}, N::
     end
   end
 
+  RE = SMatrix{size(RE,1),size(RE,2)}(RE)
+  FE = SMatrix{size(FE,1),size(FE,2)}(FE)
+
   dim = fe + ree  #dimension of the space
   rep = 1
 
@@ -281,7 +286,7 @@ function gfilmm4(data::Array{R,2}, FE::Array{Float64,2}, RE::Array{Int64,2}, N::
 
   A = Vector{Array{Float64,2}}(undef, N)
   for j in 1:N
-    A[j] = zeros(Float64, n, 0)
+    A[j] = @SMatrix zeros(Float64, n, 0)
   end
 
   for i in 1:ree  #Sample all the Z's
@@ -419,6 +424,7 @@ function gfilmm4(data::Array{R,2}, FE::Array{Float64,2}, RE::Array{Int64,2}, N::
       ESS[k] = 1 / (WT' * WT)
       #---------------------------------------------------------------Resample
       if ESS[k] < thresh && k < K[end]-1 #- 1 # -->> pourquoi -1 ?
+        println("RESAMPLE")
         u = zeros(Float64, N)
         N_sons = zeros(Int64, N)
         # generate the cumulative distribution
@@ -434,7 +440,7 @@ function gfilmm4(data::Array{R,2}, FE::Array{Float64,2}, RE::Array{Int64,2}, N::
         end
         Nsons_sum = zeros(Int64, N+1)
         for i in 2:(N+1)
-          @inbounds Nsons_sum[i] = Nsons_sum[i-1] + Nsons[i-1]
+          @inbounds Nsons_sum[i] = Nsons_sum[i-1] + N_sons[i-1]
         end
         @inbounds Nsons_totalSum = Nsons_sum[N+1]
         JJ = union(1:k, K_start) # WRONG !!!
@@ -448,21 +454,21 @@ function gfilmm4(data::Array{R,2}, FE::Array{Float64,2}, RE::Array{Int64,2}, N::
         for i in 1:N
           @inbounds if N_sons[i] > 0
             @inbounds VCtemp = VC[i] * ones(Int64, N_sons[i])
-            Ztemp = Vector{Array{Float64,2}}(undef, ree)
+            Ztemp = Vector{Any}(undef, ree)
             VTtemp = Vector{Array{Float64,2}}(undef, N_sons[i])
             @inbounds copy = N_sons[i] - 1  # # to be resampled
             for ii in 1:N_sons[i]
               @inbounds VTtemp[ii] = VT[i]  #copy original vertices
             end
             for ii in 1:ree
-              @inbounds Ztemp[ii] = repeat(Z[ii][:, i], outer = (1, N_sons[i]))  #copy Z
+              @inbounds Ztemp[ii] = SMatrix{size(Z[ii],1), N_sons[i]}(repeat(Z[ii][:, i], outer = (1, N_sons[i])))  #copy Z
             end
             ##########################################################
             if copy > 0
                 ord = sampleInt(ree)
                 for kk in ord
                   for ii in 1:copy
-                    XX = zeros(Float64, n, 0)
+                    XX = @SMatrix zeros(Float64, n, 0)
                     for jj in 1:ree
                       @inbounds XX = hcat(XX, RE[:, (ESUM[jj]-E[jj]+1):ESUM[jj]] * Ztemp[jj][:, ii])
                     end
@@ -473,16 +479,16 @@ function gfilmm4(data::Array{R,2}, FE::Array{Float64,2}, RE::Array{Int64,2}, N::
                     Z0 = findall(Z1 .== 0.0)  #Z's not sampled
                     Z00 = setdiff(1:length(Z1), Z0) #These are the levels with Z for effect kk
                     @inbounds CO2 = CO2[:, setdiff(1:size(CO2, 2), level0)]
-                    @inbounds Z1 = Z1[Z00]
+                    @inbounds Z1 = Z1[Z00]#SVector{length(Z00)}(Z1[Z00])
                     if fe > 0
                       @inbounds XX = hcat(FE[JJ, :], XX)
                     end
                     MAT = hcat(-XX, CO2)
                     if rank(MAT) < size(MAT, 2)
                       NUL = nullspace(MAT) #
-                      @inbounds n1 = NUL[1:size(NUL, 1) - size(CO2, 2), :]
-                      @inbounds n2 = NUL[(size(NUL, 1) - size(CO2, 2)+1):end, :]
-                      qrf = qr!(n2)
+                      @inbounds n1 = SMatrix{size(NUL, 1) - size(CO2, 2), size(NUL, 2)}(NUL[1:size(NUL, 1) - size(CO2, 2), :])
+                      @inbounds n2 = SMatrix{size(CO2, 2), size(NUL, 2)}(NUL[(size(NUL, 1) - size(CO2, 2)+1):end, :])
+                      qrf = qr(n2)
                       @inbounds O2 = qrf.Q[:, 1:size(n2,2)]
                       RR = qrf.R
                       O1 = n1 * inv(UpperTriangular(RR))
@@ -560,11 +566,11 @@ function gfilmm4(data::Array{R,2}, FE::Array{Float64,2}, RE::Array{Int64,2}, N::
     nn = Vector{Vector{Int64}}(undef, ree)
     for ii in 1:ree
       @inbounds nn[ii] = unique(RE2[n1, ii])
-      @inbounds ZZ[ii] = zeros(Float64, length(nn[ii]), N)
+      @inbounds ZZ[ii] = @SMatrix zeros(Float64, length(nn[ii]), N)
     end
 
     for i in 1:N
-      Ztemp = Vector{Vector{Float64}}(undef, ree)
+      Ztemp = Vector{Any}(undef, ree)
       @inbounds VTtemp = VT[i]
       for ii in 1:ree
         @inbounds Ztemp[ii] = Z[ii][nn[ii], i]  #copy Z
@@ -582,16 +588,16 @@ function gfilmm4(data::Array{R,2}, FE::Array{Float64,2}, RE::Array{Int64,2}, N::
         @inbounds CO2 = RE[:, (ESUM[kk]-E[kk]+1):(ESUM[kk]-E[kk]+length(nn[kk]))]
         Z0 = findall(Z1 .== 0)  #Z's not sampled
         Z00 = setdiff(1:length(Z1), Z0) #These are the levels with Z for effect kk
-        @inbounds Z1 = Z1[Z00]
+        @inbounds Z1 = SVector{length(Z00)}(Z1[Z00])
         if fe > 0
           XX = hcat(FE, XX)
         end
         MAT = hcat(-XX, CO2)
         if rank(MAT) < size(MAT, 2)
           NUL = nullspace(MAT)
-          @inbounds n1 = NUL[1:(size(NUL, 1) - size(CO2, 2)), :]
-          @inbounds n2 = NUL[(size(NUL, 1) - size(CO2, 2) + 1):end, :]
-          qrf = qr!(n2)
+          @inbounds n1 = SMatrix{size(NUL, 1) - size(CO2, 2), size(NUL, 2)}(NUL[1:size(NUL, 1) - size(CO2, 2), :])
+          @inbounds n2 = SMatrix{size(CO2, 2), size(NUL, 2)}(NUL[(size(NUL, 1) - size(CO2, 2)+1):end, :])
+          qrf = qr(n2)
           @inbounds O2 = qrf.Q[:, 1:size(n2, 2)]
           RR = qrf.R
           O1 = n1 * inv(UpperTriangular(RR))
@@ -701,3 +707,25 @@ end
 #
 # @btime test1()
 # @btime test2()
+
+using LinearAlgebra
+
+function f1(M)
+  x = qr!(M)
+  Q = x.Q;
+  R = x.R;
+  return size(Q,1) + size(R,1)
+end
+
+function f2(M)
+  Q, R = qr!(M)
+  return size(Q,1) + size(R,1)
+end
+
+using BenchmarkTools
+
+M = ones(10, 10)
+
+@btime f1(M)
+
+@btime f2(M)

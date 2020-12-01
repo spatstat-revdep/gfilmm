@@ -41,6 +41,13 @@ distribution (so fiducial inference is similar to *objective* Bayesian
 inference). The fiducial inference yields results close to the ones of the 
 frequentist inference. 
 
+### Note 
+
+Some pieces of code in the algorithm are run in parallel. In the examples below, 
+as well as in the examples of the package documentation, I set `nthreads = 2L` 
+because of CRAN restrictions: CRAN does not allow more than two threads and then
+it would not accept the package if a higher number of threads were set.
+
 
 ## First example: a non-mixed linear model
 
@@ -69,7 +76,8 @@ fidSims <- gfilmm(
   fixed = ~ x,             # fixed effects
   random = NULL,           # random effects
   data = dat,              # data
-  N = 30000L               # number of simulations
+  N = 30000L,              # number of simulations
+  nthreads = 2L
 )
 ```
 
@@ -186,7 +194,9 @@ dat        <- data.frame(
 We run the fiducial sampler:
 
 ```{r gfilmm_AOV1R}
-fidSims <- gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = 30000L)
+fidSims <- gfilmm(
+  ~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = 30000L, nthreads = 2L
+)
 ```
 
 Observe that the between standard deviation `sigma_group` has a positive value 
@@ -239,7 +249,7 @@ results change. Since we have already tried 30000 simulations, let us try with
 
 ```{r parallel}
 gfs <- lapply(c(40000L, 50000L), function(N){
-  gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = N)  
+  gfilmm(~ cbind(ylwr, yupr), ~ 1, ~ group, data = dat, N = N, nthreads = 2L)  
 })
 lapply(gfs, gfiSummary)
 ```

@@ -22,7 +22,9 @@
 #'   are not some levels of the \code{block} factor. Both options only mean 
 #'   that the two observations to predict are in two different blocks.  
 #'
-#' @examples gfi <- gfilmm(~ cbind(yield-0.1, yield+0.1), ~ N, ~ block, npk, 2000)
+#' @examples gfi <- gfilmm(
+#'   ~ cbind(yield-0.1, yield+0.1), ~ N, ~ block, npk, 2000, nthreads = 2
+#' )
 #' fpd <- gfilmmPredictive(gfi, data.frame(N = c("0","1"), block = c("4","6")))
 #' gfiSummary(fpd)
 gfilmmPredictive <- function(gfi, newdata){
@@ -76,11 +78,6 @@ gfilmmPredictive <- function(gfi, newdata){
   for(i in 1L:N){
     cholSigma <- chol(Z %*% (rep(vars[, i]^2, times = E) * t(Z)))
     Mu <- X %*% fparams[, i]
-#    out[i,] <- rmvn(1L, Mu, Sigma)
-    # A <- matrix(NA_real_, nrow = 1L, ncol = neffects[["fixed"]])
-    # .Call("rmvnCpp", n_ = 1L, mu_ = Mu, sigma_ = Sigma, ncores_ = 1L,
-    #       isChol_ = FALSE, A_ = A, PACKAGE = "mvnfast")
-    # out[i,] <- A
     out[i,] <- t(Mu) + t(gauss[i,]) %*% cholSigma # or gauss[i,,drop=FALSE] instead of t() => TODO: benchmarks
   }
   out <- list(FPD = as.data.frame(out), WEIGHT = gfi[["WEIGHT"]])

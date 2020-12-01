@@ -56,7 +56,9 @@ Samples the fiducial distributions.
 }
 \examples{
 h <- 0.01
-gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N=5000)
+gfi <- gfilmm(
+  ~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N = 5000, nthreads = 2
+)
 # fiducial cumulative distribution function of the intercept:
 Fintercept <- gfiCDF(~ `(Intercept)`, gfi)
 plot(Fintercept, xlim = c(40, 65))

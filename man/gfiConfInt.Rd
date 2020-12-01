@@ -23,6 +23,8 @@ Fiducial confidence interval of a parameter of interest.
 }
 \examples{
 h <- 0.01
-gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N=5000)
+gfi <- gfilmm(
+  ~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N = 5000, nthreads = 2
+)
 gfiConfInt(~ sqrt(sigma_block^2 + sigma_error^2)/`(Intercept)`, gfi)
 }

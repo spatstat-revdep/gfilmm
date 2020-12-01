@@ -32,7 +32,9 @@
 #'   The Annals of Statistics 2012, Vol. 40, No. 4, 2102–2127.
 #'
 #' @examples h <- 0.01
-#' gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N=5000)
+#' gfi <- gfilmm(
+#'   ~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N = 5000, nthreads = 2
+#' )
 #' # fiducial cumulative distribution function of the intercept:
 #' Fintercept <- gfiCDF(~ `(Intercept)`, gfi)
 #' plot(Fintercept, xlim = c(40, 65))
@@ -123,34 +125,3 @@ print.gfilmm <- function(x, ...){
   cat(capture.output(str(setNames(x, nms))), sep = "\n")
 }
 
-######################
-# dat <- data.frame(
-#   A = c("a", "b", "c"),
-#   B = c("x", "y", "z"),
-#   NotUsed = c(1, 2, 3)
-# )
-# 
-# frml <- ~ A + B + A:B
-# 
-# # [[1]]
-# # [1] a b c
-# # Levels: a b c
-# # 
-# # [[2]]
-# # [1] x y z
-# # Levels: x y z
-# # 
-# # [[3]]
-# # [1] a:x b:y c:z
-# # Levels: a:x b:y c:z
-# 
-# library(lazyeval) # to use 'as.lazy' and 'lazy_eval'
-# tf <- terms.formula(frml)
-# factors <- rownames(attr(tf, "factors"))
-# tvars <- attr(tf, "variables")
-# tlabs <- attr(tf, "term.labels")
-# used <- lapply(eval(tvars, envir = dat), as.factor)
-# names(used) <- factors
-# lapply(tlabs, function(tlab){
-#   droplevels(lazy_eval(as.lazy(tlab), data = used))
-# })

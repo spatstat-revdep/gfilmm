@@ -31,7 +31,9 @@ Actually the levels of the random effects given in \code{newdata} can
   that the two observations to predict are in two different blocks.
 }
 \examples{
-gfi <- gfilmm(~ cbind(yield-0.1, yield+0.1), ~ N, ~ block, npk, 2000)
+gfi <- gfilmm(
+  ~ cbind(yield-0.1, yield+0.1), ~ N, ~ block, npk, 2000, nthreads = 2
+)
 fpd <- gfilmmPredictive(gfi, data.frame(N = c("0","1"), block = c("4","6")))
 gfiSummary(fpd)
 }

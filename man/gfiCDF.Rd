@@ -22,7 +22,9 @@ Fiducial cumulative distribution function of a parameter of
 }
 \examples{
 h <- 0.01
-gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N=5000)
+gfi <- gfilmm(
+  ~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N = 5000, nthreads = 2
+)
 F <- gfiCDF(~ sqrt(sigma_block^2 + sigma_error^2)/`(Intercept)`, gfi)
 plot(F, xlim = c(0, 0.3), main = "Coefficient of variation", 
      ylab = expression("Pr("<="x)"))

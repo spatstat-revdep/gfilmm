@@ -24,6 +24,8 @@ Quantiles of the fiducial distribution of a parameter of
 }
 \examples{
 h <- 0.01
-gfi <- gfilmm(~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N=5000)
+gfi <- gfilmm(
+  ~ cbind(yield-h, yield+h), ~ 1, ~ block, data = npk, N = 5000, nthreads = 2
+)
 gfiQuantile(~ sqrt(sigma_block^2 + sigma_error^2), gfi, c(25, 50, 75)/100)
 }

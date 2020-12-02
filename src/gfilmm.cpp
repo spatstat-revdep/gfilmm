@@ -1136,7 +1136,7 @@ GFI gfilmm_(
 #endif
     for(size_t i = 0; i < N; i++) {
 #ifdef _OPENMP
-      const unsigned thread = thread;
+      const unsigned thread = omp_get_thread_num();
 #else
       const unsigned thread = 0;
 #endif

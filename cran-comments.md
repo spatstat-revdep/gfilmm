@@ -1,6 +1,8 @@
 ## Release summary
 
-This is a resubmission. I set `nthreads=2` to respect CRAN policies.
+The CRAN checks of the previous version detected an error in the C++ code. I've 
+found an error and I've fixed it, hopefully this error was the cause. I also 
+fixed a NOTE ("all imports must be used").
 
 ## Test environments
 

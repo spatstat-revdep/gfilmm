@@ -25,6 +25,7 @@
 #' @importFrom utils head
 #' @importFrom rgr gx.sort.df
 #' @importFrom Matrix sparseMatrix
+#' @importFrom parallel detectCores
 #' @export
 #' 
 #' @references J. Cisewski and J.Hannig. 

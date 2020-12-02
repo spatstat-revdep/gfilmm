@@ -1,3 +1,8 @@
+# gfilmm 2.0.1
+
+Fixed a mistake in the C++ code.
+
+
 # gfilmm 2.0.0
 
 * The main function `gfilmm` now has an option `nthreads`, to run some pieces of code of the algorithm in parallel. 

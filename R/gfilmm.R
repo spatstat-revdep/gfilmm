@@ -50,6 +50,7 @@ gfilmm <- function(
   N, thresh = N/2, long = FALSE, seed = NULL, 
   nthreads = parallel::detectCores()
 ){
+  if(inSolaris()) nthreads <- 1L
   seed <- if(is.null(seed)){
     sample.int(1000000L, 1L)
   }else{

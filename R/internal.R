@@ -1,3 +1,7 @@
+inSolaris <- function(){
+  grepl("sunos", tolower(Sys.info()["sysname"]))
+}
+
 #' @importFrom forcats fct_reorder
 #' @noRd
 recode <- function(x){

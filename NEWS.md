@@ -1,3 +1,8 @@
+# gfilmm 2.0.2
+
+Attempt to solve an issue with the CRAN checks on the Solaris platform.
+
+
 # gfilmm 2.0.1
 
 Fixed a mistake in the C++ code.

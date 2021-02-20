@@ -1,7 +1,7 @@
 Package: gfilmm
 Type: Package
 Title: Generalized Fiducial Inference for Normal Linear Mixed Models
-Version: 2.0.2
+Version: 2.0.3
 Authors@R: c(
     person("Stéphane", "Laurent", role = c("aut", "cre"),
            email = "laurent_step@outlook.fr"),
@@ -19,7 +19,8 @@ Imports:
   Rcpp (>= 1.0.0), 
   lazyeval, 
   stats, 
-  spatstat, 
+  spatstat (>= 2.0.0), 
+  spatstat.geom,
   utils, 
   forcats, 
   rgr, 

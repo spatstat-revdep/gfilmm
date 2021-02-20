@@ -1,3 +1,8 @@
+# gfilmm 2.0.3
+
+Updated 'spatstat' package.
+
+
 # gfilmm 2.0.2
 
 Attempt to solve an issue with the CRAN checks on the Solaris platform.

@@ -71,7 +71,8 @@ gfiSummary <- function(gfi, conf = 0.95){
 #' @return The fiducial confidence interval of the parameter.
 #' 
 #' @importFrom lazyeval f_eval_rhs
-#' @importFrom spatstat ewcdf quantile.ewcdf
+#' @import spatstat
+#' @importFrom spatstat.geom ewcdf quantile.ewcdf
 #' @export
 #'
 #' @examples h <- 0.01
@@ -100,7 +101,8 @@ gfiConfInt <- function(parameter, gfi, conf = 0.95){#, side = "two-sided"){
 #' @return The fiducial cumulative distribution function of the parameter.
 #' 
 #' @importFrom lazyeval f_eval_rhs
-#' @importFrom spatstat ewcdf 
+#' @import spatstat
+#' @importFrom spatstat.geom ewcdf 
 #' @export
 #'
 #' @examples h <- 0.01
@@ -129,7 +131,8 @@ gfiCDF <- function(parameter, gfi){
 #'
 #' @return Numeric vector of quantiles, of the same length as \code{probs}.
 #' 
-#' @importFrom spatstat quantile.ewcdf 
+#' @import spatstat
+#' @importFrom spatstat.geom quantile.ewcdf 
 #' @export
 #'
 #' @examples h <- 0.01

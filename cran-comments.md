@@ -1,6 +1,6 @@
 # gfilmm 2.0.3
 
-Updated the 'spatstat' package.
+The CRAN check shows an error. It is due to the update of the 'spatstat' package.
 
 
 # gfilmm 2.0.2

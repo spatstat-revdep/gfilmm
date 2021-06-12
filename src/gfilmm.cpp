@@ -190,7 +190,7 @@ const std::vector<Real> fidSample(
               std::min(MIN, std::min((U - VTsum.coeff(zni)) / VT2.coeff(zni),
                                      (L - VTsum.coeff(zni)) / VT2.coeff(zni)));
         }
-        temp = 1 - (atan(MIN) / PI + 0.5);
+        temp = 1 - (atan(MIN) / M_PI + 0.5);
       } else if((d2 && c1) || (d1 && c2)) {
         MIN = -infty;
         MAX = -infty;
@@ -200,7 +200,7 @@ const std::vector<Real> fidSample(
               std::max(MAX, std::max((U - VTsum.coeff(zni)) / VT2.coeff(zni),
                                      (L - VTsum.coeff(zni)) / VT2.coeff(zni)));
         }
-        temp = atan(MAX) / PI + 0.5;
+        temp = atan(MAX) / M_PI + 0.5;
       } else {
         Real Hmax = -infty;
         Real Hmin = infty;
@@ -239,14 +239,14 @@ const std::vector<Real> fidSample(
         }
         Real Pprob, Nprob;
         if(tpos == infty) {
-          Pprob = 1 - (atan(bpos) / PI + 0.5);
+          Pprob = 1 - (atan(bpos) / M_PI + 0.5);
         } else {
-          Pprob = atan(tpos) / PI + 0.5;
+          Pprob = atan(tpos) / M_PI + 0.5;
         }
         if(tneg == infty) {
-          Nprob = 1 - (atan(bneg) / PI + 0.5);
+          Nprob = 1 - (atan(bneg) / M_PI + 0.5);
         } else {
-          Nprob = atan(tneg) / PI + 0.5;
+          Nprob = atan(tneg) / M_PI + 0.5;
         }
         temp = Pprob + Nprob;
         Pprob = Pprob / temp;
@@ -260,10 +260,10 @@ const std::vector<Real> fidSample(
         }
       }
     }
-    const Real y = atan(MAX) / PI + 0.5;
-    const Real x = atan(MIN) / PI + 0.5;
+    const Real y = atan(MAX) / M_PI + 0.5;
+    const Real x = atan(MIN) / M_PI + 0.5;
     const Real u = x + (y - x) * runif(generator);
-    ZZ = tan(PI * (u - 0.5));
+    ZZ = tan(M_PI * (u - 0.5));
     const Real ZZ2 = ZZ * ZZ;
     wt = exp(-ZZ2 / 2) * (1 + ZZ2) * temp;
   } else {
@@ -275,10 +275,10 @@ const std::vector<Real> fidSample(
       MAX = std::max(MAX, std::max(xu, xl));
       MIN = std::min(MIN, std::min(xu, xl));
     }
-    const Real y = atan(MAX) / PI + 0.5;
-    const Real x = atan(MIN) / PI + 0.5;
+    const Real y = atan(MAX) / M_PI + 0.5;
+    const Real x = atan(MIN) / M_PI + 0.5;
     const Real u = x + (y - x) * runif(generator);
-    ZZ = tan(PI * (u - 0.5));
+    ZZ = tan(M_PI * (u - 0.5));
     const Real ZZ2 = ZZ * ZZ;
     wt = exp(-ZZ2 / 2) * (1 + ZZ2) * (y - x);
   }

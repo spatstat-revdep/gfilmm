@@ -1,3 +1,8 @@
+# gfilmm 2.0.4
+
+Switch PI to M_PI to support STRICT_R_HEADERS (thanks @eddelbuettel).
+
+
 # gfilmm 2.0.3
 
 Updated 'spatstat' package.

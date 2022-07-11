@@ -1,3 +1,8 @@
+# gfilmm 2.0.5
+
+Removed the 'rgr' dependency.
+
+
 # gfilmm 2.0.4
 
 Merged a pull request.

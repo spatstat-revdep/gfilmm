@@ -23,7 +23,6 @@
 #' 
 #' @importFrom stats model.matrix terms.formula as.formula
 #' @importFrom utils head
-#' @importFrom rgr gx.sort.df
 #' @importFrom Matrix sparseMatrix
 #' @importFrom parallel detectCores
 #' @export

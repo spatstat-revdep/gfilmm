@@ -27,7 +27,7 @@ Imports:
     parallel,
     Rcpp (>= 1.0.0),
     spatstat (>= 2.0.0),
-    spatstat.geom,
+    spatstat.univar,
     stats,
     utils
 Suggests: 

@@ -72,7 +72,7 @@ gfiSummary <- function(gfi, conf = 0.95){
 #' 
 #' @importFrom lazyeval f_eval_rhs
 #' @import spatstat
-#' @importFrom spatstat.geom ewcdf quantile.ewcdf
+#' @importFrom spatstat.univar ewcdf quantile.ewcdf
 #' @export
 #'
 #' @examples h <- 0.01
@@ -102,7 +102,7 @@ gfiConfInt <- function(parameter, gfi, conf = 0.95){#, side = "two-sided"){
 #' 
 #' @importFrom lazyeval f_eval_rhs
 #' @import spatstat
-#' @importFrom spatstat.geom ewcdf 
+#' @importFrom spatstat.univar ewcdf 
 #' @export
 #'
 #' @examples h <- 0.01
@@ -132,7 +132,7 @@ gfiCDF <- function(parameter, gfi){
 #' @return Numeric vector of quantiles, of the same length as \code{probs}.
 #' 
 #' @import spatstat
-#' @importFrom spatstat.geom quantile.ewcdf 
+#' @importFrom spatstat.univar quantile.ewcdf 
 #' @export
 #'
 #' @examples h <- 0.01
